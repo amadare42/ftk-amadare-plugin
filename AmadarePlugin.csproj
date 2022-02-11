@@ -47,6 +47,11 @@
       <HintPath>Libs\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
+  
+  <ItemGroup>
+    <None Remove="Resources\buttons" />
+    <EmbeddedResource Include="Resources\buttons\*" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>H:\SteamLibrary\steamapps\common\For The King\BepInEx\plugins\AmadarePlugin\</OutputPath>

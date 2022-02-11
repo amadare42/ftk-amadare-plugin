@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using AmadarePlugin.InventoryPresets;
+using AmadarePlugin.Resources;
 using BepInEx;
 using BepInEx.Logging;
 using Google2u;
@@ -25,6 +26,7 @@ namespace AmadarePlugin
         {
             Instance = this;
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+            ResourcesManager.Init();
 
             On.CharacterStats.GetXpDisplayString += (_, self) => GetXpDisplayString(self);
             On.uiPlayerStats.UpdateDisplay += (orig, self, cow) =>
