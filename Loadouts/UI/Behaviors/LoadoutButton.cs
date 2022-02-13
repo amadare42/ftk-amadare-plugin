@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace AmadarePlugin.InventoryPresets.UI.Behaviors;
+namespace AmadarePlugin.Loadouts.UI.Behaviors;
 
 public class LoadoutButton : MonoBehaviour
 {

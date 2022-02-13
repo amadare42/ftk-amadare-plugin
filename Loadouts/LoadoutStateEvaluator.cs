@@ -1,8 +1,9 @@
 ﻿using System.Linq;
-using AmadarePlugin.InventoryPresets.UI.Behaviors;
+using AmadarePlugin.Extensions;
+using AmadarePlugin.Loadouts.UI.Behaviors;
 using GridEditor;
 
-namespace AmadarePlugin.InventoryPresets;
+namespace AmadarePlugin.Loadouts;
 using LoadoutDict = System.Collections.Generic.Dictionary<PlayerInventory.ContainerID, GridEditor.FTK_itembase.ID>;
 using ContainersDict = System.Collections.Generic.Dictionary<PlayerInventory.ContainerID, ItemContainer>;
 

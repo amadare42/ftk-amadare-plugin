@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
 using Newtonsoft.Json;
-using UnityEngine;
 
-namespace AmadarePlugin.InventoryPresets;
+namespace AmadarePlugin.Loadouts;
 
 public class LoadoutRepository
 {
@@ -82,6 +82,25 @@ public class LoadoutRepository
         }
 
         this.Loadouts = JsonConvert.DeserializeObject<LoadoutDto>(serialized)?.Loadouts ?? new ();
+        
+        foreach (var key in this.Loadouts.Keys.ToArray())
+        {
+            var loadout = this.Loadouts[key];
+            if (loadout.Length < LoadoutManager.SlotsCount)
+            {
+                var arr = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[LoadoutManager.SlotsCount];
+                loadout.CopyTo(arr, 0);
+                this.Loadouts[key] = arr;
+                Plugin.Log.LogInfo("Loadout was extended");
+            } 
+            else if (loadout.Length > LoadoutManager.SlotsCount)
+            {
+                var arr = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[LoadoutManager.SlotsCount];
+                Array.Copy(loadout, 0, arr, 0, LoadoutManager.SlotsCount);
+                this.Loadouts[key] = arr;
+                Plugin.Log.LogInfo("Loadout was trimmed");
+            }
+        }
     }
 }
 

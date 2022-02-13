@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace AmadarePlugin.InventoryPresets.Sync;
+namespace AmadarePlugin.Loadouts.Sync;
 
 public class SyncService
 {

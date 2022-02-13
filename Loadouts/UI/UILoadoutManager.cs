@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AmadarePlugin.InventoryPresets.UI.Behaviors;
+using AmadarePlugin.Extensions;
+using AmadarePlugin.Loadouts.Fitting;
+using AmadarePlugin.Loadouts.UI.Behaviors;
 using AmadarePlugin.Options;
 using AmadarePlugin.Resources;
 using Google2u;
@@ -9,30 +11,26 @@ using SimpleBind.Utilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using LoadoutDict = System.Collections.Generic.Dictionary<PlayerInventory.ContainerID, GridEditor.FTK_itembase.ID>;
-using ContainersDict = System.Collections.Generic.Dictionary<PlayerInventory.ContainerID, ItemContainer>;
 
-namespace AmadarePlugin.InventoryPresets.UI;
+namespace AmadarePlugin.Loadouts.UI;
 
-public class UiInventoryLoadoutManager
+public partial class UILoadoutManager
 {
     private static StringBuilder sharedStringBuilder = new();
+    
     private readonly ILoadoutButtonsCallbacks callbacks;
     private readonly LoadoutRepository loadouts;
     private GameObject loadoutPanel = null;
     private LoadoutButton[] buttons = new LoadoutButton[LoadoutManager.SlotsCount];
     private Dictionary<LoadoutButtonState, ButtonStateSprites> ButtonStatesMap = new();
-    private bool isExpanded = false;
 
     public static int NewLineMod = 19;
-    private ShowMoreButton showMoreBtn;
 
-    private Dictionary<PlayerInventory.ContainerID, Texture2D> ContainerIcons = new();
-
-    public UiInventoryLoadoutManager(ILoadoutButtonsCallbacks callbacks, LoadoutRepository loadouts)
+    public UILoadoutManager(ILoadoutButtonsCallbacks callbacks, LoadoutRepository loadouts)
     {
         this.callbacks = callbacks;
         this.loadouts = loadouts;
+        this.maximizeStatService = new MaximizeStatService();
         On.uiPlayerInventory.ShowCharacterInventory += (orig, self, cow, cycler) =>
         {
             orig(self, cow, cycler);
@@ -40,8 +38,7 @@ public class UiInventoryLoadoutManager
             if (!this.loadoutPanel || this.loadoutPanel == null)
             {
                 RuntimeResources.Init();
-                InitLoadoutButtons(rect);
-                InitContainerIcons();
+                InitLoadoutPanel(rect);
             }
             else
             {
@@ -93,7 +90,7 @@ public class UiInventoryLoadoutManager
         };
     }
     
-    private void InitLoadoutButtons(RectTransform parentRect)
+    private void InitLoadoutPanel(RectTransform parentRect)
     {
         InitButtonStatesMap();
         
@@ -102,22 +99,32 @@ public class UiInventoryLoadoutManager
         var transform = panel.AddComponent<RectTransform>();
         transform.SetParent(parentRect);
         
-        transform.anchorMin = Vector2.zero;
-        transform.anchorMax = Vector2.one;
-        transform.anchoredPosition = new Vector2(-290, -400);
-        transform.sizeDelta = new Vector2(-570, -700);
-        transform.pivot = Vector2.one;
+        transform.anchorMin = new Vector2(0, 1);
+        transform.anchorMax =  new Vector2(0, 1);
+        transform.anchoredPosition = new Vector2(21, -415);
+        transform.sizeDelta = new Vector2(0, 5);
+        transform.pivot = Vector2.zero;
+
+        var layout = panel.AddComponent<HorizontalLayoutGroup>();
+        layout.spacing = 1;
+        layout.childControlWidth = false;
+        layout.childControlHeight = true;
+
+        var sizeFitter = panel.AddComponent<ContentSizeFitter>();
+        sizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         // loadout buttons
         for (var i = 0; i < LoadoutManager.SlotsCount; i++)
         {
             this.buttons[i] = CreateButton(transform, i);
         }
+
+        InitMaximizeStatButtons(transform);
     }
 
     private void InitButtonStatesMap()
     {
-        Sprite Sprite(string name) => RuntimeResources.LoadButton(name);
+        Sprite Sprite(string name) => RuntimeResources.Get<Sprite>(name);
 
         this.ButtonStatesMap[LoadoutButtonState.None] = new ButtonStateSprites(null);
         this.ButtonStatesMap[LoadoutButtonState.Disabled] = new ButtonStateSprites(Sprite("disabled"));
@@ -144,29 +151,7 @@ public class UiInventoryLoadoutManager
         LoadoutButton.ButtonStatesMap = this.ButtonStatesMap;
     }
 
-    private void InitContainerIcons()
-    {
-        Plugin.Log.LogInfo("Fetching container icons...");
-        
-        var images = UnityEngine.GameObject.Find("EquipRoot")
-            .GetComponentsInChildren<UnityEngine.UI.Image>()
-            .Where(i => i.name.StartsWith("ItemTargetBG"))
-            .ToArray();
 
-        if (images.Length != LoadoutManager.EquipableContainers.Length)
-        {
-            Plugin.Log.LogWarning($"Images count missmatch! {images.Length}");
-            return;
-        }
-        
-        for (var i = 0; i < LoadoutManager.EquipableContainers.Length; i++)
-        {
-            ContainerIcons[LoadoutManager.EquipableContainers[i]] = images[i].sprite.texture;
-        }
-
-        Plugin.Log.LogInfo("Fetching container icons done...");
-    }
-    
     private LoadoutButton CreateButton(RectTransform parentRect, int idx)
     {
         var go = new GameObject($"loadout-button-{idx}");
@@ -178,8 +163,13 @@ public class UiInventoryLoadoutManager
         transform.anchorMin = new Vector2(0, 1);
         transform.anchorMax = new Vector2(0, 1);
         transform.anchoredPosition = new Vector2(idx * 6f, 0);
+        transform.pivot = new Vector2(.5f, .5f);
         transform.sizeDelta = new Vector2(5, 5);
         transform.SetHeight(5);
+
+        var layoutElement = go.AddComponent<LayoutElement>();
+        layoutElement.preferredWidth = 5;
+        layoutElement.preferredHeight = 5;
 
         // click handling
         var handler = go.AddComponent<LoadoutButtonPointerHandler>();
@@ -202,23 +192,6 @@ public class UiInventoryLoadoutManager
         return loadoutButton;
     }
     
-    private void CreateMoreButton(RectTransform parentRect)
-    {
-        var go = new GameObject($"loadout-button-more");
-        
-        // positioning
-        var transform = go.AddComponent<RectTransform>();
-        transform.SetParent(parentRect);
-        
-        transform.anchorMin = new Vector2(0, 1);
-        transform.anchorMax = new Vector2(0, 1);
-        transform.sizeDelta = new Vector2(5, 5);
-        transform.anchoredPosition = new Vector2(32f, 0);
-
-        this.showMoreBtn = go.AddComponent<ShowMoreButton>();
-        this.showMoreBtn.OnExpandedChanged += OnExpandedChanged;
-    }
-
     private void OnExpandedChanged(bool state)
     {
         UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
@@ -229,7 +202,7 @@ public class UiInventoryLoadoutManager
         if (OptionsManager.TestFit)
         {
             var cow = FTKUI.Instance.m_PlayerInventory.m_InventoryOwner;
-            UIEqipementFittingHelper.Reset(cow);
+            LoadoutFittingHelper.ResetDisplay(cow);
         }
     }
 
@@ -241,7 +214,8 @@ public class UiInventoryLoadoutManager
             var loadout = this.loadouts.Get(cow.m_PlayerName, idx);
             if (loadout.Count > 0)
             {
-                UIEqipementFittingHelper.TestFit(cow, loadout);
+                // TODO: use cached stat dummy
+                LoadoutFittingHelper.TestFit(cow, loadout);
             }
         }
     }
@@ -251,7 +225,15 @@ public class UiInventoryLoadoutManager
         switch (button)
         {
             case PointerEventData.InputButton.Left:
-                this.callbacks.LoadSlot(idx);
+                if (loadoutButton.State == LoadoutButtonState.Empty)
+                {
+                    this.callbacks.SaveSlot(idx);
+                }
+                else
+                {
+                    this.callbacks.LoadSlot(idx);
+                }
+
                 break;
             case PointerEventData.InputButton.Right:
                 this.callbacks.SaveSlot(idx);
@@ -275,21 +257,62 @@ public class UiInventoryLoadoutManager
             button.tooltip.m_ToolTipOffset = new Vector2(0, - 90 - button.tooltip.m_DetailInfo.Count(c => c == '\n') * NewLineMod);
         }
 
-        // if (OptionsManager.HideExtraSlots)
-        // {
-        //     for (var idx = this.buttons.Length - 1; idx > 0; idx--)
-        //     {
-        //         var button = this.buttons[idx];
-        //         if (button.State is LoadoutButtonState.Empty or LoadoutButtonState.Disabled)
-        //         {
-        //             button.gameObject.SetActive(false);
-        //         }
-        //     }
-        // }
+        if (OptionsManager.OptimizeStatButtons)
+        {
+            this.maximizedStatDummys = this.maximizeStatService.GetOptimizedLoadouts(cow);
+        }
+
+        UpdateButtonDisplay();
+    }
+
+    private void UpdateButtonDisplay()
+    {
+        if (OptionsManager.HideExtraSlots)
+        {
+            var lastVisibleIdx = 0;
+            if (this.buttons.Last().State.IsOccupied())
+            {
+                lastVisibleIdx = this.buttons.Length - 1;
+            }
+            else
+            {
+                for (var idx = this.buttons.Length - 1; idx >= 0; idx--)
+                {
+                    var button = this.buttons[idx];
+                    if (!button.State.IsOccupied())
+                    {
+                        if (idx > 1 && this.buttons[idx - 1].State.IsOccupied())
+                        {
+                            // make sure that there is extra available slot
+                            lastVisibleIdx = idx;
+                            break;
+                        }
+
+                        lastVisibleIdx = idx;
+                    }
+                }
+            }
+
+            for (var i = 0; i < this.buttons.Length; i++)
+            {
+                this.buttons[i].gameObject.SetActive(i <= lastVisibleIdx);
+            }
+        }
+
+        foreach (var button in this.maximizeStatButtons)
+        {
+            button.gameObject.SetActive(this.showMoreBtn.IsExpanded);
+        }
+        
     }
 
     private string GetButtonTooltipText(CharacterOverworld cow, LoadoutButtonState loadoutButtonState, int idx)
     {
+        if (loadoutButtonState == LoadoutButtonState.Empty)
+        {
+            return "<color=#444444>LMB or RMB to save</color>";
+        }
+        
         // clear for .net 3.5
         sharedStringBuilder.Length = 0;
 

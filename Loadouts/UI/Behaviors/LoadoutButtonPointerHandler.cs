@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace AmadarePlugin.InventoryPresets.UI.Behaviors;
+namespace AmadarePlugin.Loadouts.UI.Behaviors;
 
 public class LoadoutButtonPointerHandler : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {

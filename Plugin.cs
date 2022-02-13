@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using System.Text;
-using AmadarePlugin.InventoryPresets;
+using AmadarePlugin.Loadouts;
 using BepInEx;
 using BepInEx.Logging;
 using Google2u;
@@ -33,6 +33,7 @@ namespace AmadarePlugin
             };
             this.loadoutManager = new LoadoutManager();
             this.loadoutManager.Init();
+            uiStartGame.gIsFirstTime = false;
             
             Logger.LogInfo($"Patched!");
         }

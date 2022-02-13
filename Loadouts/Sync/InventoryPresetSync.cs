@@ -1,5 +1,5 @@
 
-namespace AmadarePlugin.InventoryPresets.Sync;
+namespace AmadarePlugin.Loadouts.Sync;
 
 public class InventoryPresetSync : Photon.PunBehaviour
 {

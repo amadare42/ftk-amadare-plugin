@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace AmadarePlugin.Resources;
@@ -14,10 +15,13 @@ public static class RuntimeResources
         "iconIntelligence",
         "iconStrength",
         "iconTalent",
-        "backingArrow"
+        "iconLuck",
+        
+        "backingArrow",
+        "arrowRB"
     };
-
-    private static readonly Dictionary<string, string> loadoutButtonsMap = new()
+    
+    private static readonly Dictionary<string, string> RenamedRuntimeResourcesMap = new()
     {
         { "disabled", "buttonGeneric1DIS" },
         { "empty_normal", "buttonGeneric2" },
@@ -33,21 +37,25 @@ public static class RuntimeResources
 
     public static T Get<T>(string key) => (T)dict[key];
 
-    public static Sprite LoadButton(string name) => (Sprite)dict[loadoutButtonsMap[name]];
-
     public static void Init()
     {
         var sprites = UnityEngine.Resources.FindObjectsOfTypeAll<Sprite>();
-        SpriteKeys.AddRange(loadoutButtonsMap.Values);
+        SpriteKeys.AddRange(RenamedRuntimeResourcesMap.Values);
+        var renamedCount = 0;
 
-        foreach (var tex in sprites)
+        foreach (var obj in sprites)
         {
-            if (SpriteKeys.Contains(tex.name))
+            if (SpriteKeys.Contains(obj.name))
             {
-                dict[tex.name] = tex;
+                dict[obj.name] = obj;
+                if (RenamedRuntimeResourcesMap.ContainsValue(obj.name))
+                {
+                    dict[RenamedRuntimeResourcesMap.First(p => p.Value == obj.name).Key] = obj;
+                    renamedCount++;
+                }
             }
         }
         
-        Plugin.Log.LogInfo($"Found {dict.Count}/{SpriteKeys.Count} runtime Sprite resources.");
+        Plugin.Log.LogInfo($"Found {dict.Count - renamedCount}(+{renamedCount})/{SpriteKeys.Count} runtime Sprite resources.");
     }
 }

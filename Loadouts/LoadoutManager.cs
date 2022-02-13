@@ -1,10 +1,10 @@
 ﻿using System.Linq;
-using AmadarePlugin.InventoryPresets.Sync;
-using AmadarePlugin.InventoryPresets.UI;
+using AmadarePlugin.Loadouts.Sync;
+using AmadarePlugin.Loadouts.UI;
 using GridEditor;
 using LoadoutDict = System.Collections.Generic.Dictionary<PlayerInventory.ContainerID, GridEditor.FTK_itembase.ID>;
 
-namespace AmadarePlugin.InventoryPresets;
+namespace AmadarePlugin.Loadouts;
 
 public class LoadoutManager : ILoadoutButtonsCallbacks
 {
@@ -12,17 +12,18 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
     
     private LoadoutRepository Loadouts = new();
     private SyncService sync;
-    private UiInventoryLoadoutManager ui;
+    private UILoadoutManager ui;
     private GameSaveInterceptor gameSaveInterceptor;
 
     public void Init()
     {
         this.sync = new SyncService(this.Loadouts, this);
-        this.ui = new UiInventoryLoadoutManager(this, this.Loadouts);
+        this.ui = new UILoadoutManager(this, this.Loadouts);
         this.gameSaveInterceptor = new GameSaveInterceptor(this.Loadouts);
         On.GameLogic.RestartFadeOutFinish += GameLogicOnRestartFadeOutFinish;
         On.uiPlayerInventory.ShowCharacterInventory += (orig, self, cow, cycler) =>
         {
+            orig(self, cow, cycler);
             if (this.sync.SyncRequired)
             {
                 Plugin.Log.LogInfo("Sync required");
@@ -38,23 +39,8 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
         this.Loadouts.ClearAll();
     }
 
-    public void LoadSlot(int idx)
+    public void LoadLoadout(CharacterOverworld cow, LoadoutDict loadout)
     {
-        Plugin.Log.LogInfo("Load slot #" + idx);
-        if (!IsActivePlayer())
-        {
-            Plugin.Log.LogInfo("Loadout action prevented - wrong player!");
-            return;
-        }
-        var cow = FTKUI.Instance.m_PlayerInventory.m_InventoryOwner;
-        var loadout = this.Loadouts.Get(cow.m_PlayerName, idx);
-
-        if (!loadout.Any())
-        {
-            Plugin.Log.LogInfo("Loadout action prevented - empty loadout!");
-            return;
-        }
-        
         // EQUIP
         var inventory = cow.m_PlayerInventory;
         var activeContainers = inventory.m_Containers;
@@ -102,6 +88,26 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
         Plugin.Log.LogInfo("Loadout equip done!");
     }
 
+    public void LoadSlot(int idx)
+    {
+        Plugin.Log.LogInfo("Load slot #" + idx);
+        if (!IsActivePlayer())
+        {
+            Plugin.Log.LogInfo("Loadout action prevented - wrong player!");
+            return;
+        }
+        var cow = FTKUI.Instance.m_PlayerInventory.m_InventoryOwner;
+        var loadout = this.Loadouts.Get(cow.m_PlayerName, idx);
+
+        if (!loadout.Any())
+        {
+            Plugin.Log.LogInfo("Loadout action prevented - empty loadout!");
+            return;
+        }
+
+        LoadLoadout(cow, loadout);
+    }
+
     public void ClearSlot(int idx)
     {
         Plugin.Log.LogInfo("Clear slot #" + idx);
@@ -137,9 +143,6 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
         var cow = FTKUI.Instance.m_PlayerInventory.m_InventoryOwner;
         return GameLogic.Instance.IsSinglePlayer() && GameLogic.Instance.IsLocalMultiplayer() || cow.IsOwner ||
                cow.m_WaitForRespawn;
-        // var currentPlayer = GameLogic.Instance.GetCurrentCOW();
-        //
-        // return inventoryOwner.m_FTKPlayerID.Equals(currentPlayer.m_FTKPlayerID);
     }
 
     private static LoadoutDict GetCurrentLoadout(CharacterOverworld cow)

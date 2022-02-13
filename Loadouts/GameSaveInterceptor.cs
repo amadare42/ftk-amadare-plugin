@@ -2,7 +2,7 @@ using System;
 using FullSerializer;
 using fsSerializer = On.FullSerializer.fsSerializer;
 
-namespace AmadarePlugin.InventoryPresets;
+namespace AmadarePlugin.Loadouts;
 
 public class GameSaveInterceptor
 {
