@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace AmadarePlugin.InventoryPresets;
+namespace AmadarePlugin.InventoryPresets.UI.Behaviors;
 
 public class LoadoutButton : MonoBehaviour
 {
@@ -13,6 +13,7 @@ public class LoadoutButton : MonoBehaviour
 
     private Button button;
     private Image image;
+    public uiToolTipGeneral tooltip;
 
     void Awake()
     {

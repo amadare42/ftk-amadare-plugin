@@ -3,5 +3,4 @@ obj
 .idea
 *.DotSettings.user
 /Libs/Assembly-CSharp-firstpass.dll
-/Libs/Assembly-CSharp.dll
 /Libs/Photon3Unity3D.dll

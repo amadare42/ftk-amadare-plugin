@@ -17,7 +17,7 @@ public static class FieldsExtensions
     {
         var dictionary = new Dictionary<PlayerInventory.ContainerID, ItemContainer>();
         
-        foreach (var ctId in InventoryPresetManager.EquipableContainers)
+        foreach (var ctId in LoadoutManager.EquipableContainers)
         {
             dictionary[ctId] = inventory.Get(ctId);
         }

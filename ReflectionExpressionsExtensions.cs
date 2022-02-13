@@ -21,11 +21,6 @@ public static class ReflectionExpressionsExtensions
         cache[cacheKey] = accessor;
         return ((Func<TObj, T>)accessor)(obj);
     }
-
-    public static void SetField<T>(this object obj, string fieldName, T value)
-    {
-        obj.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(obj, value);
-    }
     
     public static Func<T,R> GetFieldAccessor<T,R>(this T obj, string fieldName) 
     { 

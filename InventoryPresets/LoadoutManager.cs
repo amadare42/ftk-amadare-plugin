@@ -1,78 +1,41 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using AmadarePlugin.InventoryPresets.Sync;
 using AmadarePlugin.InventoryPresets.UI;
-using FullSerializer;
 using GridEditor;
-using UnityEngine;
-using fsSerializer = On.FullSerializer.fsSerializer;
 using LoadoutDict = System.Collections.Generic.Dictionary<PlayerInventory.ContainerID, GridEditor.FTK_itembase.ID>;
 
 namespace AmadarePlugin.InventoryPresets;
 
-public class InventoryPresetManager : ILoadoutButtonsCallbacks
+public class LoadoutManager : ILoadoutButtonsCallbacks
 {
     public const int SlotsCount = 5;
     
-    private GameObject syncObject;
     private LoadoutRepository Loadouts = new();
-    private InventoryPresetSync sync;
+    private SyncService sync;
     private UiInventoryLoadoutManager ui;
+    private GameSaveInterceptor gameSaveInterceptor;
 
     public void Init()
     {
-        InitSyncObject();
+        this.sync = new SyncService(this.Loadouts, this);
         this.ui = new UiInventoryLoadoutManager(this, this.Loadouts);
-        
-        On.FullSerializer.fsSerializer.TrySerialize += FsSerializerOnTrySerialize;
-        On.FullSerializer.fsSerializer.TryDeserialize += FsSerializerOnTryDeserialize;
-    }
-
-    private void InitSyncObject()
-    {
-        syncObject = new GameObject();
-        this.sync = this.syncObject.AddComponent<InventoryPresetSync>();
-        sync.Manager = this;
-        sync.Repository = this.Loadouts;
-    }
-
-    private fsResult FsSerializerOnTryDeserialize(fsSerializer.orig_TryDeserialize orig, FullSerializer.fsSerializer self, fsData data, Type storagetype, ref object result)
-    {
-        if (storagetype == typeof(GameSerialize))
+        this.gameSaveInterceptor = new GameSaveInterceptor(this.Loadouts);
+        On.GameLogic.RestartFadeOutFinish += GameLogicOnRestartFadeOutFinish;
+        On.uiPlayerInventory.ShowCharacterInventory += (orig, self, cow, cycler) =>
         {
-            var res = orig(self, data, storagetype, ref result);
-            if (res.Succeeded)
+            if (this.sync.SyncRequired)
             {
-                // try to fetch loadout info each time game state is deserialized
-                if (data.AsDictionary.TryGetValue("m_Loadouts", out var entry))
-                {
-                    var asString = entry.AsString;
-                    Plugin.Log.LogInfo("Loading loadouts info " + asString);
-                    this.Loadouts.Load(asString);
-                }
-                else
-                {
-                    Plugin.Log.LogInfo("Save doesn't have loadout info");
-                }
+                Plugin.Log.LogInfo("Sync required");
+                this.sync.RequestSync();
             }
-
-            return res;
-        }
-        return orig(self, data, storagetype, ref result);
+        };
     }
 
-    private fsResult FsSerializerOnTrySerialize(fsSerializer.orig_TrySerialize orig, FullSerializer.fsSerializer self, Type storagetype, object instance, out fsData data)
+    private void GameLogicOnRestartFadeOutFinish(On.GameLogic.orig_RestartFadeOutFinish orig, GameLogic self)
     {
-        // adding loadout info each time game state is serialized
-        if (instance is GameSerialize)
-        {
-            var result = orig(self, storagetype, instance, out data);
-            var serialize = this.Loadouts.Serialize();
-            data.AsDictionary["m_Loadouts"] = new fsData(serialize);
-            Plugin.Log.LogInfo("Saved loadouts info: " + serialize);
-            return result;
-        }
-        
-        return orig(self, storagetype, instance, out data);
+        orig(self);
+        Plugin.Log.LogInfo("Cleared all loadouts");
+        this.Loadouts.ClearAll();
     }
 
     public void LoadSlot(int idx)
@@ -94,7 +57,7 @@ public class InventoryPresetManager : ILoadoutButtonsCallbacks
         
         // EQUIP
         var inventory = cow.m_PlayerInventory;
-        var activeContainers = inventory.m_Containers();
+        var activeContainers = inventory.m_Containers;
 
         foreach (var ctId in EquipableContainers)
         {
@@ -182,7 +145,7 @@ public class InventoryPresetManager : ILoadoutButtonsCallbacks
     private static LoadoutDict GetCurrentLoadout(CharacterOverworld cow)
     {
         var inventory = cow.m_PlayerInventory;
-        var containers = inventory.m_Containers();
+        var containers = inventory.m_Containers;
         var result = new LoadoutDict();
         foreach (var ctId in EquipableContainers)
         {
@@ -197,10 +160,10 @@ public class InventoryPresetManager : ILoadoutButtonsCallbacks
 
     public static readonly PlayerInventory.ContainerID[] EquipableContainers =
     {
-        PlayerInventory.ContainerID.LeftHand,
         PlayerInventory.ContainerID.RightHand,
-        PlayerInventory.ContainerID.Head,
+        PlayerInventory.ContainerID.LeftHand,
         PlayerInventory.ContainerID.Body,
+        PlayerInventory.ContainerID.Head,
         PlayerInventory.ContainerID.Foot,
         PlayerInventory.ContainerID.Trinket,
         PlayerInventory.ContainerID.Neck,

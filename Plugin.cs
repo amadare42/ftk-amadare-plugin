@@ -1,16 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
-using System.Threading;
 using AmadarePlugin.InventoryPresets;
-using AmadarePlugin.Resources;
 using BepInEx;
 using BepInEx.Logging;
 using Google2u;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace AmadarePlugin
 {
@@ -20,13 +13,12 @@ namespace AmadarePlugin
         public static Plugin Instance;
         public static ManualLogSource Log => Plugin.Instance.Logger;
 
-        private InventoryPresetManager inventoryPresetManager;
+        private LoadoutManager loadoutManager;
         
         private void Awake()
         {
             Instance = this;
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
-            ResourcesManager.Init();
 
             On.CharacterStats.GetXpDisplayString += (_, self) => GetXpDisplayString(self);
             On.uiPlayerStats.UpdateDisplay += (orig, self, cow) =>
@@ -34,17 +26,13 @@ namespace AmadarePlugin
                 orig(self, cow);
                 UpdatePoisonDisplay(self, cow);
             };
-            On.uiPlayerMainHud.OpenInventory += (orig, self) =>
-            {
-                orig(self);
-            };
             On.uiPlayerInventory.ShowCharacterInventory += (orig, self, cow, cycler) =>
             {
                 orig(self, cow, cycler);
                 LogInventory(cow);
             };
-            inventoryPresetManager = new InventoryPresetManager();
-            this.inventoryPresetManager.Init();
+            this.loadoutManager = new LoadoutManager();
+            this.loadoutManager.Init();
             
             Logger.LogInfo($"Patched!");
         }
@@ -52,7 +40,7 @@ namespace AmadarePlugin
         private static void LogInventory(CharacterOverworld cow)
         {
             var inventory = cow.m_PlayerInventory;
-            var containers = inventory.Field<PlayerInventory, Dictionary<PlayerInventory.ContainerID, ItemContainer>>("m_Containers");
+            var containers = inventory.m_Containers;
             var sb = new StringBuilder();
             
             foreach (var pair in containers)

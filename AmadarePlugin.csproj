@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyName>AmadarePlugin</AssemblyName>
-    <Description>My first plugin</Description>
+    <Description>General collection of QoL improvements</Description>
     <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
@@ -24,9 +24,11 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>Libs\Assembly-CSharp.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>Libs\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="MMHOOK_Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>Libs\MMHOOK_Assembly-CSharp.dll</HintPath>
@@ -39,6 +41,7 @@
     </Reference>
     <Reference Include="Photon3Unity3D, Version=4.1.1.14, Culture=neutral, PublicKeyToken=null">
       <HintPath>Libs\Photon3Unity3D.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="UnityEngine.Networking, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>Libs\UnityEngine.Networking.dll</HintPath>

@@ -14,7 +14,7 @@ public class LoadoutRepository
     {
         if (!this.Loadouts.TryGetValue(name, out var array))
         {
-            array = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[InventoryPresetManager.SlotsCount];
+            array = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[LoadoutManager.SlotsCount];
             for (var i = 0; i < array.Length; i++)
             {
                 array[i] = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>();
@@ -39,7 +39,7 @@ public class LoadoutRepository
     {
         if (!this.Loadouts.TryGetValue(name, out var array))
         {
-            array = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[InventoryPresetManager.SlotsCount];
+            array = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[LoadoutManager.SlotsCount];
             for (var i = 0; i < array.Length; i++)
             {
                 array[i] = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>();
@@ -58,6 +58,11 @@ public class LoadoutRepository
         }
 
         array[slot].Clear();
+    }
+
+    public void ClearAll()
+    {
+        this.Loadouts.Clear();
     }
 
     public string Serialize()
