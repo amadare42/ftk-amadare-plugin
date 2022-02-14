@@ -141,7 +141,6 @@ public class FittingCharacterStats : CharacterStats
         this.TallyCharacterMods();
         this.TallyCharacterDefense();
         this.TallyCharacterHealth(this.m_PlayerLevel, false);
-        Plugin.Log.LogInfo($"Party mods: {this.PartyArmorMod} {this.PartyResistMod} {this.PartyEvadeMod:0.000}");
     }
 
     public void AddOrRemoveCharacterModifierEx(FTK_itembase.ID _item, bool _add)

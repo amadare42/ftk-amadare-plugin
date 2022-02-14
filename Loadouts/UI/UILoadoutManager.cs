@@ -188,6 +188,7 @@ public partial class UILoadoutManager
         // button behaviour
         var loadoutButton = go.AddComponent<LoadoutButton>();
         loadoutButton.tooltip = tooltip;
+        handler.Button = loadoutButton;
         
         return loadoutButton;
     }

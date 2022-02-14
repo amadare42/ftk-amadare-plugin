@@ -31,7 +31,6 @@ public class LoadoutFittingHelper
     public static void TestFit(FittingCharacterStats stats)
     {
         UpdateDisplay(stats, GetWeapon(stats.Loadout));
-        Plugin.Log.LogInfo($"Test fit loadout.");
     }
     
 
