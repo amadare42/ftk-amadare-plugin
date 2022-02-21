@@ -11,7 +11,7 @@ public class MaximizeStatButton : MonoBehaviour, IPointerClickHandler, IPointerE
     private Image image;
     public uiToolTipGeneral tooltip;
     public Sprite sprite;
-    private StatType stat;
+    public StatType stat;
     private Action<StatType> callback;
     private Action<StatType> onHover;
     private Action<StatType> onBlur;
@@ -64,5 +64,10 @@ public class MaximizeStatButton : MonoBehaviour, IPointerClickHandler, IPointerE
     public void OnPointerExit(PointerEventData eventData)
     {
         this.onBlur?.Invoke(this.stat);
+    }
+
+    public void UpdateTooltip(int mod)
+    {
+        this.tooltip.m_Info = $"Maximize {stat:G} (<color=green>{mod}</color>)";
     }
 }

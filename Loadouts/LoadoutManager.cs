@@ -14,12 +14,16 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
     private SyncService sync;
     private UILoadoutManager ui;
     private GameSaveInterceptor gameSaveInterceptor;
-
+    private AssignToAllLoadoutsButton assignToAllButton;
+    
     public void Init()
     {
         this.sync = new SyncService(this.Loadouts, this);
         this.ui = new UILoadoutManager(this, this.Loadouts);
         this.gameSaveInterceptor = new GameSaveInterceptor(this.Loadouts);
+        this.assignToAllButton = new AssignToAllLoadoutsButton();
+
+        this.assignToAllButton.OnAssignToAllLoadoutsClick += AssignToAllLoadouts;
         On.GameLogic.RestartFadeOutFinish += GameLogicOnRestartFadeOutFinish;
         On.uiPlayerInventory.ShowCharacterInventory += (orig, self, cow, cycler) =>
         {
@@ -45,7 +49,7 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
         var inventory = cow.m_PlayerInventory;
         var activeContainers = inventory.m_Containers;
 
-        foreach (var ctId in EquipableContainers)
+        foreach (var ctId in HelperProperties.EquipableContainers)
         {
             var equipedItemId = activeContainers[ctId].GetOne();
             
@@ -141,8 +145,15 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
     public bool IsActivePlayer()
     {
         var cow = FTKUI.Instance.m_PlayerInventory.m_InventoryOwner;
-        return GameLogic.Instance.IsSinglePlayer() && GameLogic.Instance.IsLocalMultiplayer() || cow.IsOwner ||
+        
+        var isControllable = GameLogic.Instance.IsSinglePlayer() && GameLogic.Instance.IsLocalMultiplayer() || cow.IsOwner ||
                cow.m_WaitForRespawn;
+        return isControllable && IsActiveCow();
+    }
+
+    private bool IsActiveCow()
+    {
+        return GameLogic.Instance.GetCurrentCOW().m_FTKPlayerID.PhotonID == GameLogic.Instance.m_CurrentPlayer.PhotonID;
     }
 
     private static LoadoutDict GetCurrentLoadout(CharacterOverworld cow)
@@ -150,7 +161,7 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
         var inventory = cow.m_PlayerInventory;
         var containers = inventory.m_Containers;
         var result = new LoadoutDict();
-        foreach (var ctId in EquipableContainers)
+        foreach (var ctId in HelperProperties.EquipableContainers)
         {
             if (containers.TryGetValue(ctId, out var container) && !container.IsEmpty())
             {
@@ -160,15 +171,32 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
 
         return result;
     }
-
-    public static readonly PlayerInventory.ContainerID[] EquipableContainers =
+    
+    public void AssignToAllLoadouts(FTK_itembase item)
     {
-        PlayerInventory.ContainerID.RightHand,
-        PlayerInventory.ContainerID.LeftHand,
-        PlayerInventory.ContainerID.Body,
-        PlayerInventory.ContainerID.Head,
-        PlayerInventory.ContainerID.Foot,
-        PlayerInventory.ContainerID.Trinket,
-        PlayerInventory.ContainerID.Neck,
-    };
+        var loadouts = this.Loadouts.GetAllSlots(HelperProperties.InventoryOwnerName);
+        var containerID = item.m_ObjectType.GetContainer();
+        foreach (var loadout in loadouts)
+        {
+            // loadout is empty
+            if (!loadout.Any())
+                continue;
+
+            if (loadout.TryGetValue(containerID, out var currentItemId))
+            {
+                var currentItem = FTK_itembase.GetItemBase(currentItemId);
+                if (item.IsTwoHanded() && currentItem.IsOneHanded())
+                {
+                    loadout.Remove(currentItem.OtherHand());
+                }
+            }
+
+            loadout[containerID] = item.GetId();
+        }
+
+        this.Loadouts.SetAllSlots(HelperProperties.InventoryOwnerName, loadouts);
+        this.sync.SyncLoadouts();
+        AudioManager.Instance.AudioEvent("Play_gui_ex_equip");
+        this.ui.UpdateLoadoutButtonsState(HelperProperties.InventoryOwner);
+    }
 }

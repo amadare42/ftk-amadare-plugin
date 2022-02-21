@@ -49,6 +49,29 @@ public class LoadoutRepository
 
         return array[slot];
     }
+    
+    public Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[] GetAllSlots(string name)
+    {
+        if (!this.Loadouts.TryGetValue(name, out var array))
+        {
+            array = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[LoadoutManager.SlotsCount];
+            for (var i = 0; i < array.Length; i++)
+            {
+                array[i] = new Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>();
+            }
+            this.Loadouts[name] = array;
+        }
+
+        return array;
+    }
+    
+    public void SetAllSlots(string name, Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[] loadouts)
+    {
+        for (var i = 0; i < loadouts.Length; i++)
+        {
+            Set(name, i, loadouts[i]);
+        }
+    }
 
     public void Clear(string name, int slot)
     {

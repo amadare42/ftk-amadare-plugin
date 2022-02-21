@@ -155,7 +155,7 @@ public class FittingCharacterStats : CharacterStats
                 if (!this.m_CharacterMods.Contains(mod))
                 {
                     this.m_CharacterMods.Add(mod);
-                    // using augmented field to reflect potential changes in party defense that is included in armor/resist calculations
+                    // reflect potential changes in party defense that is included in armor/resist calculations
                     this.PartyArmorMod += entry.m_PartyCombatArmor;
                     this.PartyResistMod += entry.m_PartyCombatResist;
                     this.PartyEvadeMod += entry.m_PartyCombatEvade;

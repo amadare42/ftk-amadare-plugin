@@ -9,7 +9,7 @@ public static class PlayerInventoryExtensions
     {
         var dictionary = new Dictionary<PlayerInventory.ContainerID, ItemContainer>();
         
-        foreach (var ctId in LoadoutManager.EquipableContainers)
+        foreach (var ctId in HelperProperties.EquipableContainers)
         {
             dictionary[ctId] = inventory.Get(ctId);
         }

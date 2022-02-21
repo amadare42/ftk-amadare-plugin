@@ -56,6 +56,6 @@ public static class RuntimeResources
             }
         }
         
-        Plugin.Log.LogInfo($"Found {dict.Count - renamedCount}(+{renamedCount})/{SpriteKeys.Count} runtime Sprite resources.");
+        Plugin.Log.LogInfo($"Found {dict.Count - renamedCount}(+{renamedCount} renamed)/{SpriteKeys.Count} runtime Sprite resources.");
     }
 }

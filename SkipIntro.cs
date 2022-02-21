@@ -2,9 +2,9 @@
 
 namespace AmadarePlugin;
 
-public class SkipIntro
+public static class SkipIntro
 {
-    public SkipIntro()
+    public static void Run()
     {
         if (!OptionsManager.SkipIntro) return;
         

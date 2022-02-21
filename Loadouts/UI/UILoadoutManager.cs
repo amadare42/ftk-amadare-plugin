@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AmadarePlugin.Extensions;
@@ -6,7 +7,6 @@ using AmadarePlugin.Loadouts.Fitting;
 using AmadarePlugin.Loadouts.UI.Behaviors;
 using AmadarePlugin.Options;
 using AmadarePlugin.Resources;
-using Google2u;
 using SimpleBind.Utilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -17,7 +17,7 @@ namespace AmadarePlugin.Loadouts.UI;
 public partial class UILoadoutManager
 {
     private static StringBuilder sharedStringBuilder = new();
-    
+
     private readonly ILoadoutButtonsCallbacks callbacks;
     private readonly LoadoutRepository loadouts;
     private GameObject loadoutPanel = null;
@@ -50,57 +50,105 @@ public partial class UILoadoutManager
         On.uiPlayerInventory.OnClose += (orig, self) =>
         {
             orig(self);
-            if (this.loadoutPanel)
-                this.loadoutPanel.SetActive(false);
+            try
+            {
+                if (this.loadoutPanel)
+                    this.loadoutPanel.SetActive(false);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogError(e);
+            }
         };
         On.uiItemMenu.Give += (orig, self, b) =>
         {
             orig(self, b);
-            if (this.loadoutPanel && this.loadoutPanel.activeSelf)
+            try
             {
-                UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
+                if (this.loadoutPanel && this.loadoutPanel.activeSelf)
+                {
+                    UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
+                }
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogError(e);
             }
         };
         On.CharacterOverworld.AddItemToBackpackRPC += (orig, self, item, hud) =>
         {
             orig(self, item, hud);
-            Plugin.Log.LogInfo("AddItemToBackpackRPC");
-            if (this.loadoutPanel && this.loadoutPanel.activeSelf)
+            try
             {
-                UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
+                Plugin.Log.LogInfo("AddItemToBackpackRPC");
+                if (this.loadoutPanel && this.loadoutPanel.activeSelf)
+                {
+                    UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
+                }
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogError(e);
             }
         };
         On.CharacterOverworld.RemoveItemRPC += (orig, self, id, item, consumed) =>
         {
             orig(self, id, item, consumed);
-            Plugin.Log.LogInfo("RemoveItemRPC");
-            if (this.loadoutPanel && this.loadoutPanel.activeSelf)
+            try
             {
-                UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
+                Plugin.Log.LogInfo("RemoveItemRPC");
+                if (this.loadoutPanel && this.loadoutPanel.activeSelf)
+                {
+                    UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
+                }
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogError(e);
             }
         };
         On.CharacterOverworld.UnequipItemRPC += (orig, self, item, _moveToBackpack) =>
         {
             orig(self, item, _moveToBackpack);
-            Plugin.Log.LogInfo("UnequipItemRPC");
-            if (this.loadoutPanel && this.loadoutPanel.activeSelf)
+            try
             {
-                UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
+                Plugin.Log.LogInfo("UnequipItemRPC");
+                if (this.loadoutPanel && this.loadoutPanel.activeSelf)
+                {
+                    UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
+                }
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogError(e);
+            }
+        };
+        On.CharacterOverworld.EquipItemRPC += (orig, self, item, _moveToBackpack) =>
+        {
+            orig(self, item, _moveToBackpack);
+            try
+            {
+                if (this.loadoutPanel && this.loadoutPanel.activeSelf)
+                    UpdateMaximizeStatsButtons();
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogError(e);
             }
         };
     }
-    
+
     private void InitLoadoutPanel(RectTransform parentRect)
     {
         InitButtonStatesMap();
-        
+
         var panel = new GameObject("loadout-panel");
         this.loadoutPanel = panel;
         var transform = panel.AddComponent<RectTransform>();
         transform.SetParent(parentRect);
-        
+
         transform.anchorMin = new Vector2(0, 1);
-        transform.anchorMax =  new Vector2(0, 1);
+        transform.anchorMax = new Vector2(0, 1);
         transform.anchoredPosition = new Vector2(21, -415);
         transform.sizeDelta = new Vector2(0, 5);
         transform.pivot = Vector2.zero;
@@ -155,11 +203,11 @@ public partial class UILoadoutManager
     private LoadoutButton CreateButton(RectTransform parentRect, int idx)
     {
         var go = new GameObject($"loadout-button-{idx}");
-        
+
         // positioning
         var transform = go.AddComponent<RectTransform>();
         transform.SetParent(parentRect);
-        
+
         transform.anchorMin = new Vector2(0, 1);
         transform.anchorMax = new Vector2(0, 1);
         transform.anchoredPosition = new Vector2(idx * 6f, 0);
@@ -177,22 +225,22 @@ public partial class UILoadoutManager
         handler.HoverCallback = OnHover;
         handler.BlurCallback = OnBlur;
         handler.Index = idx;
-        
+
         // tooltip
         var tooltip = go.AddComponent<uiToolTipGeneral>();
         tooltip.m_IsFollowHoriz = true;
         tooltip.m_ReturnRawInfo = true;
         tooltip.m_Info = "Loadout " + (idx + 1);
         tooltip.m_ToolTipOffset = new Vector2(0, -100);
-        
+
         // button behaviour
         var loadoutButton = go.AddComponent<LoadoutButton>();
         loadoutButton.tooltip = tooltip;
         handler.Button = loadoutButton;
-        
+
         return loadoutButton;
     }
-    
+
     private void OnExpandedChanged(bool state)
     {
         UpdateLoadoutButtonsState(FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
@@ -244,23 +292,24 @@ public partial class UILoadoutManager
                 break;
         }
     }
-    
+
     public void UpdateLoadoutButtonsState(CharacterOverworld cow)
     {
         for (var idx = 0; idx < this.buttons.Length; idx++)
         {
             var button = this.buttons[idx];
-            
+
             var state = LoadoutStateEvaluator.GetButtonState(cow, this.loadouts, idx);
             button.SetState(state);
             button.tooltip.m_DetailInfo = GetButtonTooltipText(cow, state, idx);
             // it ain't stupid if it works!
-            button.tooltip.m_ToolTipOffset = new Vector2(0, - 90 - button.tooltip.m_DetailInfo.Count(c => c == '\n') * NewLineMod);
+            button.tooltip.m_ToolTipOffset =
+                new Vector2(0, -90 - button.tooltip.m_DetailInfo.Count(c => c == '\n') * NewLineMod);
         }
 
-        if (OptionsManager.OptimizeStatButtons)
+        if (OptionsManager.MaximizeStatButtons)
         {
-            this.maximizedStatDummys = this.maximizeStatService.GetOptimizedLoadouts(cow);
+            this.maximizedStatDummys = this.maximizeStatService.GetMaximizeStatLoadout(cow);
         }
 
         UpdateButtonDisplay();
@@ -268,8 +317,22 @@ public partial class UILoadoutManager
 
     private void UpdateButtonDisplay()
     {
+        UpdateLoadoutButtons();
+        UpdateMaximizeStatsButtons();
+    }
+
+    private void UpdateLoadoutButtons()
+    {
         if (OptionsManager.HideExtraSlots)
         {
+            if (!this.buttons.Any() || this.buttons.Any(b => b == null))
+            {
+                var rect = (RectTransform)GameObject.Find("InventoryBackground").transform;
+                Plugin.Log.LogError("Loadout buttons were empty, recreating them...");
+                InitMaximizeStatButtons(rect);
+                return;
+            }
+
             var lastVisibleIdx = 0;
             if (this.buttons.Last().State.IsOccupied())
             {
@@ -299,12 +362,6 @@ public partial class UILoadoutManager
                 this.buttons[i].gameObject.SetActive(i <= lastVisibleIdx);
             }
         }
-
-        foreach (var button in this.maximizeStatButtons)
-        {
-            button.gameObject.SetActive(this.showMoreBtn.IsExpanded);
-        }
-        
     }
 
     private string GetButtonTooltipText(CharacterOverworld cow, LoadoutButtonState loadoutButtonState, int idx)
@@ -313,9 +370,7 @@ public partial class UILoadoutManager
         {
             return "<color=#444444>LMB or RMB to save</color>";
         }
-        
-        // clear for .net 3.5
-        sharedStringBuilder.Length = 0;
+        sharedStringBuilder.Clear();
 
         var dictionary = this.loadouts.Get(cow.m_PlayerName, idx);
         if (loadoutButtonState == LoadoutButtonState.Equipped)
@@ -325,12 +380,22 @@ public partial class UILoadoutManager
 
         foreach (var pair in dictionary)
         {
-            var itemName = FTKHub.Localized<TextItems>("STR_" + pair.Value);
-            var itemMissing = !LoadoutStateEvaluator.HasItem(cow.m_PlayerInventory.m_Containers, pair.Value);
+            var containerId = pair.Key;
+            var itemId = pair.Value;
+            var itemName = itemId.GetLocalizedName();
+            var playerInv = cow.m_PlayerInventory;
+            var itemMissing = !LoadoutStateEvaluator.HasItem(playerInv.m_Containers, itemId);
             if (itemMissing)
             {
                 sharedStringBuilder
                     .Append("<color=red>")
+                    .Append(itemName)
+                    .AppendLine("</color>");
+            }
+            else if (playerInv.GetItemCount(containerId, itemId) > 0)
+            {
+                sharedStringBuilder
+                    .Append("<color=#add8e6ff>")
                     .Append(itemName)
                     .AppendLine("</color>");
             }

@@ -1,0 +1,7 @@
+{
+  "description": "General Quality of Life improvements",
+  "dependencies": [
+    "bbepis-BepInExPack-5.4.1801",
+    "Amadare-HookGenPatcher-1.2.1"
+  ]
+}

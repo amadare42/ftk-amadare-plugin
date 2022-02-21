@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using AmadarePlugin.Extensions;
+using AmadarePlugin.Options;
+using On.GridEditor;
 
 namespace AmadarePlugin;
 
@@ -10,6 +12,28 @@ public class UiTweaks
         On.CharacterStats.GetXpDisplayString += CharacterStatsOnGetXpDisplayString;
         On.CharacterStats.EndTurnActionSequence += OnEndTurnActionSequence;
         On.uiPlayerStats.UpdateDisplay += OnUpdateDisplay;
+        On.GridEditor.FTK_miniEncounter.GetDisplayBottom += FTK_miniEncounterOnGetDisplayBottom;
+        On.GridEditor.FTK_miniEncounter.GetDisplayName += FTK_miniEncounterOnGetDisplayName;
+    }
+
+    private string FTK_miniEncounterOnGetDisplayName(FTK_miniEncounter.orig_GetDisplayName orig, GridEditor.FTK_miniEncounter self)
+    {
+        if (OptionsManager.HighlightOneTimeEncounters)
+        {
+            return $"{orig(self)}{(self.m_DestroyOnLeave ? "!" : "")}";
+        }
+
+        return orig(self);
+    }
+
+    private string FTK_miniEncounterOnGetDisplayBottom(FTK_miniEncounter.orig_GetDisplayBottom orig, GridEditor.FTK_miniEncounter self)
+    {
+        if (OptionsManager.HighlightOneTimeEncounters)
+        {
+            return$"{orig(self)}\n<color=#555555>This encounter {(self.m_DestroyOnLeave ? "WILL" : "WILL NOT")} disappear on leave</color>";
+        }
+
+        return orig(self);
     }
 
     private IEnumerator OnEndTurnActionSequence(On.CharacterStats.orig_EndTurnActionSequence orig, CharacterStats self, ContinueFSM _cfsm)
@@ -31,7 +55,7 @@ public class UiTweaks
 
     private static void UpdatePoisonDisplay(uiPlayerStats stats, CharacterOverworld cow)
     {
-        if (cow.m_CharacterStats.IsPoisoned)
+        if (cow.m_CharacterStats.IsPoisoned && OptionsManager.DisplayPoisonTurns)
         {
             var text = stats.m_PoisonAilment.m_Text.text + " (" + (3 - cow.m_CharacterStats.m_PoisonTimeCounter) + " turns)";
             stats.m_PoisonAilment.SetTextValue(text);
@@ -40,7 +64,12 @@ public class UiTweaks
 
     private string CharacterStatsOnGetXpDisplayString(On.CharacterStats.orig_GetXpDisplayString orig, CharacterStats self)
     {
-        return GetXpDisplayString(self);
+        if (OptionsManager.CustomXpString)
+        {
+            return GetXpDisplayString(self);
+        }
+
+        return orig(self);
     }
     
     private static string GetXpDisplayString(CharacterStats stats)

@@ -27,6 +27,7 @@ public class SyncService
 
     public void RequestSync()
     {
+        AssertObjectCreated();
         this.sync.RequestLoadout();
     }
 

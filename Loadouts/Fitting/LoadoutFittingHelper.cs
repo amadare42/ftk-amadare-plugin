@@ -13,9 +13,9 @@ public class LoadoutFittingHelper
         cow.m_UIPlayMainHud.UpdateHud();
     }
 
-    public static FittingCharacterStats CreateFittingCharacterStats(CharacterOverworld cow, LoadoutDict loadout, bool amend = false)
+    public static FittingCharacterStats CreateFittingCharacterStats(CharacterOverworld cow, LoadoutDict loadout)
     {
-        var dummyStats = CreateFittingDummy(cow, loadout, amend);
+        var dummyStats = CreateFittingDummy(cow, loadout);
         dummyStats.Loadout = loadout;
         dummyStats.Recalculate();
 
@@ -34,7 +34,7 @@ public class LoadoutFittingHelper
     }
     
 
-    private static FittingCharacterStats CreateFittingDummy(CharacterOverworld cow, LoadoutDict loadout, bool amend = false)
+    private static FittingCharacterStats CreateFittingDummy(CharacterOverworld cow, LoadoutDict loadout)
     {
         var stats = cow.m_CharacterStats;
         // ReSharper disable once Unity.IncorrectMonoBehaviourInstantiation
@@ -45,36 +45,9 @@ public class LoadoutFittingHelper
         foreach (var pair in cow.m_PlayerInventory.GetValidEquipmentContainers())
         {
             var container = pair.Value;
-            if (!container.IsEmpty() && (!amend || loadout.ContainsKey(container.m_ID)))
+            if (!container.IsEmpty())
             {
                 var equippedItemId = container.GetOne();
-                if (amend)
-                {
-                    if (!loadout.ContainsKey(container.m_ID))
-                    {
-                        var isSingleHandEquipped = container.m_ID == PlayerInventory.ContainerID.RightHand || container.m_ID == PlayerInventory.ContainerID.LeftHand;
-                        if (isSingleHandEquipped && loadout.TryGetValue(PlayerInventory.ContainerID.RightHand, out var item) && FTK_itembase.GetItemBase(item).m_ObjectSlot == FTK_itembase.ObjectSlot.twoHands)
-                        {
-                            // 1 or 2 single handed items quipped but loadout have two handed item - remove item
-                            dummyStats.AddOrRemoveCharacterModifierEx(equippedItemId, false);
-                        }
-                        else
-                        {
-                            var twoHandsEquipped = FTK_itembase.GetItemBase(equippedItemId).m_ObjectSlot == FTK_itembase.ObjectSlot.twoHands;
-                            var loadoutHaveSingleHandedItems =
-                                loadout.ContainsKey(PlayerInventory.ContainerID.RightHand) ||
-                                loadout.ContainsKey(PlayerInventory.ContainerID.LeftHand);
-                            if (twoHandsEquipped && loadoutHaveSingleHandedItems)
-                            {
-                                // two-handed item is equipped, but loadout have 1 or 2 single handed items - remove item
-                                dummyStats.AddOrRemoveCharacterModifierEx(equippedItemId, false);
-                            }
-                        }
-                        
-                        // item slot is empty in loadout, but may be filled on actual character - don't remove item mods 
-                        continue;
-                    }
-                }
                 dummyStats.AddOrRemoveCharacterModifierEx(equippedItemId, false);
             }
         }

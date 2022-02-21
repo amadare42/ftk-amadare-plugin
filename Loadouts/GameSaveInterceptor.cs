@@ -54,6 +54,7 @@ public class GameSaveInterceptor
                 }
                 else
                 {
+                    this.repository.ClearAll();
                     Plugin.Log.LogInfo("Save doesn't have loadout info");
                 }
             }

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using AmadarePlugin.Loadouts.Fitting;
 using AmadarePlugin.Loadouts.UI.Behaviors;
 using AmadarePlugin.Options;
@@ -11,7 +13,7 @@ namespace AmadarePlugin.Loadouts.UI;
 
 public partial class UILoadoutManager
 {
-    private List<MaximizeStatButton> maximizeStatButtons = new();
+    private readonly List<MaximizeStatButton> maximizeStatButtons = new();
     private Dictionary<StatType,FittingCharacterStats> maximizedStatDummys;
     private readonly MaximizeStatService maximizeStatService;
     private ShowMoreButton showMoreBtn;
@@ -100,13 +102,51 @@ public partial class UILoadoutManager
     
     private void InitMaximizeStatButtons(RectTransform transform)
     {
+        if (!OptionsManager.MaximizeStatButtons) return;
+        
         CreateMoreButton(transform);
         
+        this.maximizeStatButtons.Clear();
         // maximize stat buttons
         for (var i = 0; i < (int)StatType.COUNT; i++)
         {
             var statType = (StatType)i;
             this.maximizeStatButtons.Add(CreateMaximizeStatButton(transform, statType));
         }
+    }
+
+    private void UpdateMaximizeStatsButtons()
+    {
+        if (!this.maximizeStatButtons.Any() || this.maximizeStatButtons.Any(x => x == null))
+        {
+            Plugin.Log.LogError("Maximize stat buttons were empty");
+            return;
+        }
+
+        foreach (var button in this.maximizeStatButtons)
+        {
+            var increase = GetStatMod(button.stat, FTKUI.Instance.m_PlayerInventory.m_InventoryOwner);
+            var visible = this.showMoreBtn.IsExpanded && increase > 0;
+            button.gameObject.SetActive(visible);
+            if (visible)
+            {
+                button.UpdateTooltip(increase);
+            }
+        }
+    }
+
+    private int GetStatMod(StatType statType, CharacterOverworld cow)
+    {
+        if (this.maximizedStatDummys.TryGetValue(statType, out var stats))
+        {
+            var potentialValue = Mathf.Clamp(MaximizeStatService.GetStatValue(statType, stats), 0, 0.95f);
+            var currentValue = MaximizeStatService.GetStatValue(statType, cow.m_CharacterStats);
+            if (potentialValue > currentValue)
+            {
+                return (int)Math.Round(potentialValue * 100, 0);
+            }
+        }
+
+        return 0;
     }
 }

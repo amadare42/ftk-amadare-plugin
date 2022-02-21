@@ -7,7 +7,7 @@ namespace AmadarePlugin.Loadouts.UI.Behaviors;
 public class LoadoutButton : MonoBehaviour
 {
     [HideInInspector]
-    public static Dictionary<LoadoutButtonState, ButtonStateSprites> ButtonStatesMap = new Dictionary<LoadoutButtonState, ButtonStateSprites>();
+    public static Dictionary<LoadoutButtonState, ButtonStateSprites> ButtonStatesMap = new();
 
     public LoadoutButtonState State = LoadoutButtonState.Disabled;
 
