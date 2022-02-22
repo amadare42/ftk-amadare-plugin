@@ -6,7 +6,7 @@ namespace AmadarePlugin.Resources;
 
 public static class RuntimeResources
 {
-    private static Dictionary<string, object> dict = new();
+    private static Dictionary<string, Object> dict = new();
 
     private static List<string> SpriteKeys = new() {
         "iconAwareness",
@@ -18,10 +18,14 @@ public static class RuntimeResources
         "iconLuck",
         
         "backingArrow",
-        "arrowRB"
+        "arrowRB",
+        "coins"
+    };
+    private static List<string> FontKeys = new() {
+        "Kingthings Petrock"
     };
     
-    private static readonly Dictionary<string, string> RenamedRuntimeResourcesMap = new()
+    private static readonly Dictionary<string, string> RenamedSprites = new()
     {
         { "disabled", "buttonGeneric1DIS" },
         { "empty_normal", "buttonGeneric2" },
@@ -35,27 +39,37 @@ public static class RuntimeResources
         { "unavailable_normal", "buttonGeneric3" },
     };
 
-    public static T Get<T>(string key) => (T)dict[key];
+    public static T Get<T>(string key) where T : Object => (T)dict[key];
 
     public static void Init()
     {
-        var sprites = UnityEngine.Resources.FindObjectsOfTypeAll<Sprite>();
-        SpriteKeys.AddRange(RenamedRuntimeResourcesMap.Values);
         var renamedCount = 0;
+        
+        // sprites
+        SpriteKeys.AddRange(RenamedSprites.Values);
+        Load<Sprite>(SpriteKeys, ref renamedCount);
 
-        foreach (var obj in sprites)
+        // font
+        Load<Font>(FontKeys, ref  renamedCount);
+        
+        Plugin.Log.LogInfo($"Found {dict.Count - renamedCount}(+{renamedCount} renamed)/{SpriteKeys.Count} runtime resources.");
+    }
+
+    private static void Load<T>(List<string> keys, ref int renamedCount) where T : Object
+    {
+        var objects = UnityEngine.Resources.FindObjectsOfTypeAll<T>();
+
+        foreach (var obj in objects)
         {
-            if (SpriteKeys.Contains(obj.name))
+            if (keys.Contains(obj.name))
             {
                 dict[obj.name] = obj;
-                if (RenamedRuntimeResourcesMap.ContainsValue(obj.name))
+                if (RenamedSprites.ContainsValue(obj.name))
                 {
-                    dict[RenamedRuntimeResourcesMap.First(p => p.Value == obj.name).Key] = obj;
+                    dict[RenamedSprites.First(p => p.Value == obj.name).Key] = obj;
                     renamedCount++;
                 }
             }
         }
-        
-        Plugin.Log.LogInfo($"Found {dict.Count - renamedCount}(+{renamedCount} renamed)/{SpriteKeys.Count} runtime Sprite resources.");
     }
 }

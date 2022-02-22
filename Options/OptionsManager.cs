@@ -13,10 +13,11 @@ public static class OptionsManager
     public static bool HighlightOneTimeEncounters;
     public static bool DisplayPoisonTurns;
     public static bool DebugLogging = false;
+    public static bool ShowBasePrice = false;
 
     public static void Init(ConfigFile configFile)
     {
-        SkipIntro = configFile.Bind("General", "Skip Into", true,
+        SkipIntro = configFile.Bind("General", "Skip Intro", true,
                 "If enabled, into would be skipped along with \"Prepare to die\" message on game start.")
             .Value;
         InventoryOnSinglePress = configFile.Bind("General", "Single press inventory", true,
@@ -30,6 +31,9 @@ public static class OptionsManager
             .Value;
         DisplayPoisonTurns = configFile.Bind("General", "Display poison turns", true,
                 "If enabled, when hovering on poison, it would be displayed how many poison ticks left until it wears off.")
+            .Value;
+        ShowBasePrice = configFile.Bind("General", "Display price", true,
+                "Show base item price in item card. Please note that this price is just an estimate, depending on where you will be selling, price will vary.")
             .Value;
         
         TestFit = configFile.Bind("Loadouts", "Test fit", true,

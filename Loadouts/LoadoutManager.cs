@@ -45,6 +45,12 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
 
     public void LoadLoadout(CharacterOverworld cow, LoadoutDict loadout)
     {
+        if (!IsActivePlayer())
+        {
+            Plugin.Log.LogInfo("Loadout action prevented - wrong player!");
+            return;
+        }
+        
         // EQUIP
         var inventory = cow.m_PlayerInventory;
         var activeContainers = inventory.m_Containers;
