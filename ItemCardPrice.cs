@@ -15,6 +15,8 @@ public class ItemCardPrice
 
     private Text cachedLabel = null;
     private GameObject cachedPanel = null;
+
+    private static Color CanSellColor = new Color(0.3255f, 0.6824f, 0.4756f);
     
     public ItemCardPrice()
     {
@@ -22,8 +24,11 @@ public class ItemCardPrice
             OnItemPopover;
     }
 
-    private GameObject OnItemPopover(On.uiInventoryItemDisplay.orig_Show_ID_Transform_CharacterOverworld_Mode_string_Texture_bool_int_uiLoreCard_bool_bool orig, uiInventoryItemDisplay self, FTK_itembase.ID _itemid, Transform _lastowner, CharacterOverworld _cow, uiItemDetail.Mode _mode, string _cameraid, Texture _textureoverride, bool _isinventory, int _amount, uiLoreCard _lorecard, bool _showequip, bool _forcefrontside)
-    {
+    private GameObject OnItemPopover(
+        On.uiInventoryItemDisplay.orig_Show_ID_Transform_CharacterOverworld_Mode_string_Texture_bool_int_uiLoreCard_bool_bool orig, 
+        uiInventoryItemDisplay self, FTK_itembase.ID _itemid, Transform _lastowner, CharacterOverworld _cow, uiItemDetail.Mode _mode, 
+        string _cameraid, Texture _textureoverride, bool _isinventory, int _amount, uiLoreCard _lorecard, bool _showequip, bool _forcefrontside
+    ) {
         GameObject r = null;
         try
         {
@@ -32,7 +37,7 @@ public class ItemCardPrice
 
             if (OptionsManager.ShowBasePrice)
             {
-                UpdatePrice(self, _itemid);
+                UpdatePrice(self, _itemid, _cow);
             }
         }
         catch (Exception ex)
@@ -43,11 +48,37 @@ public class ItemCardPrice
         return r;
     }
 
-    private void UpdatePrice(uiInventoryItemDisplay itemDisplay, FTK_itembase.ID itemId)
+    private void UpdatePrice(uiInventoryItemDisplay itemDisplay, FTK_itembase.ID itemId, CharacterOverworld cow)
     {
         var itembase = FTK_itembase.GetItemBase(itemId);
         var txt = GetPriceLabel((RectTransform)itemDisplay.gameObject.transform);
-        var price = CalculatePrice(itembase);
+
+        // if item isn't sellable, disabled price panel
+        if (GameLogic.Instance.m_CantSellOrDiscardItems.Contains(itemId))
+        {
+            this.cachedPanel.SetActive(false);
+            return;
+        }
+        
+        // if in POI where sell is possible, display real sell price
+        var poi = cow.m_HexLand.m_POI;
+        if (poi != null && poi.CanSellItems())
+        {
+            this.cachedPanel.SetActive(true);
+            var sellValue = GetSellValue(itemId, cow, poi);
+            if (sellValue == 0)
+            {
+                this.cachedPanel.SetActive(false);
+                return;
+            }
+            
+            txt.text = sellValue.ToString();
+            txt.color = CanSellColor;
+            return;
+        }
+        
+        // if in overworld, where sell isn't possible, display base price
+        var price = CalculateBasePrice(itembase);
         if (price == 0)
         {
             this.cachedPanel.SetActive(false);
@@ -56,10 +87,16 @@ public class ItemCardPrice
         {
             this.cachedPanel.SetActive(true);
             txt.text = price.ToString();
+            txt.color = VisualParams.Instance.m_ColorTints.m_Gold;
         }
     }
+    
+    private int GetSellValue(FTK_itembase.ID item, CharacterOverworld cow, MiniHexInfo poi)
+    {
+        return FTK_weaponStats2DB.GetDB().IsContain(item) ? FTK_weaponStats2DB.Get(item).GetSellValue(cow, poi) : FTK_itemsDB.Get(item).GetSellValue(cow, poi);
+    }
 
-    private int CalculatePrice(FTK_itembase itembase)
+    private int CalculateBasePrice(FTK_itembase itembase)
     {
         return FTKUtil.RoundToInt(FTKUtil.Price(itembase._goldValue, 1, itembase.m_PriceScale) *
                                   GameFlow.Instance.GameDif.m_ItemSellValue);
