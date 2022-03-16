@@ -1,6 +1,8 @@
 ﻿using AmadarePlugin.Extensions;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace AmadarePlugin.Common;
 
@@ -19,6 +21,8 @@ public static class UiFactory
 
         var toggle = checkbox.GetComponent<Toggle>();
         toggle.isOn = value;
+        toggle.onValueChanged = new Toggle.ToggleEvent();
+        
         var text = checkbox.transform.Find("Label").GetComponent<Text>();
         if (tooltipTitle != null || tooltipDetails != null)
         {
@@ -30,6 +34,25 @@ public static class UiFactory
         text.text = name;
 
         return checkbox;
+    }
+    
+    public static GameObject CreateMenuButton(string label, UnityAction callback, GameObject prefab = null)
+    {
+        prefab ??= uiOptionsMenu.Instance.m_ControlButton.gameObject;
+        
+        var btnObject = Object.Instantiate(prefab);
+        btnObject.name = "custom button";
+        var transform = (RectTransform)btnObject.transform;
+        transform.Scale1();
+
+        var textComponent = transform.Find("Text").GetComponent<Text>();
+        textComponent.text = label;
+
+        var buttonComponent = btnObject.GetComponent<Button>();
+        buttonComponent.onClick = new Button.ButtonClickedEvent();
+        buttonComponent.onClick.AddListener(callback);
+
+        return btnObject;
     }
 
     public static GameObject SetUILayer(this GameObject go)

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using AmadarePlugin.Options;
 using BepInEx;
 
 namespace AmadarePlugin.Features;
@@ -8,7 +9,7 @@ public class SteamFixer
 {
     public static void Run()
     {
-        if (PublishPlatform.PlatformName == "steam")
+        if (PublishPlatform.PlatformName == "steam" && OptionsManager.AddSteamAppId)
         {
             var appidPath = Path.Combine(
                 Path.GetDirectoryName(Paths.ExecutablePath),

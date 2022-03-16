@@ -16,11 +16,14 @@ namespace AmadarePlugin
         private LoadoutManager loadoutManager;
         private UiTweaks uiTweaks;
         private ItemCardPrice itemCardPrice;
+        private PluginOptionsUi optionsUi;
 
         private void Awake()
         {
             Instance = this;
-            OptionsManager.Init(this.Config);
+            this.optionsUi = new PluginOptionsUi();
+            OptionsManager.Init(this.Config, this.optionsUi);
+            this.optionsUi.Init();
             CachedDB.Init();
 
             SteamFixer.Run();

@@ -165,9 +165,21 @@ public partial class UILoadoutManager
         {
             this.loadoutPanel.SetActive(true);
         }
-        
-        if (!OptionsManager.AlwaysShare)
+
+        if (OptionsManager.AlwaysShare)
         {
+            if (this.shareCheckbox) 
+            {
+                this.shareCheckbox.gameObject.SetActive(false);
+            }
+        }
+        else 
+        {
+            if (!this.shareCheckbox)
+            {
+                this.shareCheckbox = CreateShareCheckbox((RectTransform)this.loadoutPanel.transform);
+            }
+
             this.shareCheckbox.gameObject.SetActive(true);
             this.shareCheckbox.interactable = FtkHelpers.IsInventoryOwner;
         }
