@@ -1,5 +1,4 @@
 ﻿using System;
-using System;
 using System.Collections.Generic;
 using GridEditor;
 
@@ -7,9 +6,9 @@ namespace AmadarePlugin.Common;
 
 public static class CachedDB
 {
-    private static readonly Dictionary<FTK_itembase.ID, FTK_characterModifier.ID> itemToModMap = new();
-    private static readonly Dictionary<FTK_itembase.ID, string> itemIdToStringMap = new();
-    private static readonly Dictionary<string, FTK_itembase.ID> nameToItemIdMap = new();
+    public static readonly Dictionary<FTK_itembase.ID, FTK_characterModifier.ID> ItemToModMap = new();
+    public static readonly Dictionary<FTK_itembase.ID, string> ItemIdToStringMap = new();
+    public static readonly Dictionary<string, FTK_itembase.ID> NameToItemIdMap = new();
 
     public static void Init()
     {
@@ -22,14 +21,14 @@ public static class CachedDB
             {
                 var itemId = (FTK_itembase.ID)Enum.Parse(typeof(FTK_itembase.ID), name, true);
                 var modId = (FTK_characterModifier.ID)Enum.Parse(typeof(FTK_characterModifier.ID), name);
-                itemToModMap[itemId] = modId;
+                ItemToModMap[itemId] = modId;
             }
             catch (Exception ex)
             {
                 list.Add(name);
             }
         }
-        Plugin.Log.LogInfo($"Cached item to mod mapping. {itemToModMap.Count} items. Not found: {list.Count} ({string.Join(",  ", list.ToArray())}");
+        Plugin.Log.LogInfo($"Cached item to mod mapping. {ItemToModMap.Count} items. Not found: {list.Count} ({string.Join(",  ", list.ToArray())}");
 
         // item to name map
         foreach (var name in Enum.GetNames(typeof(FTK_itembase.ID)))
@@ -37,24 +36,24 @@ public static class CachedDB
             try
             {
                 var itemId = (FTK_itembase.ID)Enum.Parse(typeof(FTK_itembase.ID), name, true);
-                itemIdToStringMap[itemId] = name;
-                nameToItemIdMap[name] = itemId;
+                ItemIdToStringMap[itemId] = name;
+                NameToItemIdMap[name] = itemId;
             }
             catch (Exception ex)
             {
             }
         }
-        Plugin.Log.LogInfo($"Cached item to name mapping. {itemIdToStringMap.Count} items.");
+        Plugin.Log.LogInfo($"Cached item to name mapping. {ItemIdToStringMap.Count} items.");
     }
 
     public static FTK_characterModifier.ID ItemToModId(FTK_itembase item)
     {
-        return itemToModMap[nameToItemIdMap[item.m_ID]];
+        return ItemToModMap[NameToItemIdMap[item.m_ID]];
     }
     
     public static FTK_characterModifier.ID ItemToModId(FTK_itembase.ID itemId)
     {
-        return itemToModMap[itemId];
+        return ItemToModMap[itemId];
     }
 
     public static bool TryGetModById(FTK_characterModifier.ID modId, out FTK_characterModifier mod)
@@ -71,7 +70,7 @@ public static class CachedDB
     {
         mod = null;
         
-        if (!itemToModMap.TryGetValue(itemId, out modId))
+        if (!ItemToModMap.TryGetValue(itemId, out modId))
         {
             return false;
         }
@@ -88,12 +87,12 @@ public static class CachedDB
         mod = null;
         modId = default;
         
-        if (!nameToItemIdMap.TryGetValue(item.m_ID, out var itemId))
+        if (!NameToItemIdMap.TryGetValue(item.m_ID, out var itemId))
         {
             return false;
         }
         
-        if (!itemToModMap.TryGetValue(itemId, out modId))
+        if (!ItemToModMap.TryGetValue(itemId, out modId))
         {
             return false;
         }
@@ -107,7 +106,7 @@ public static class CachedDB
 
     public static FTK_itembase.ID GetItemId(FTK_itembase item)
     {
-        if (item == null || !nameToItemIdMap.TryGetValue(item.m_ID, out var itemId))
+        if (item == null || !NameToItemIdMap.TryGetValue(item.m_ID, out var itemId))
         {
             Plugin.Log.LogWarning("GetId: null");
             return FTK_itembase.ID.None;

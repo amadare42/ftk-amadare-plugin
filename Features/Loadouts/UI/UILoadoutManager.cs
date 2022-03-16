@@ -42,7 +42,6 @@ public partial class UILoadoutManager
         this.loadouts = loadouts;
         this.characterShareTracker = characterShareTracker;
         this.sync = sync;
-        this.maximizeStatService = new MaximizeStatService();
         
         On.uiPlayerInventory.ShowStats += OnShowStats;
         On.uiPlayerInventory.ShowCharacterInventory += OnShowCharacterInventory;
@@ -398,6 +397,7 @@ public partial class UILoadoutManager
             var state = LoadoutStateEvaluator.GetButtonState(cow, this.loadouts, idx);
             button.SetState(state);
             button.tooltip.m_DetailInfo = GetButtonTooltipText(cow, state, idx);
+            UpdateTooltipOffset(button.tooltip);
             var newlines = button.tooltip.m_DetailInfo.Count(c => c == '\n');
             var verticalShift = newlines <= 1
                 ? 60
@@ -407,9 +407,8 @@ public partial class UILoadoutManager
 
         if (OptionsManager.MaximizeStatButtons)
         {
-            this.localStatDummys =
-                this.maximizeStatService.GetMaximizeStatLoadout(cow, new List<CharacterOverworld>(0));
-            this.distributedMaximizedStatDummys = this.maximizeStatService.GetMaximizeStatLoadout(cow, cow
+            this.localStatDummys = InventoryCalculatorHelper.GetMaximizeStatLoadout(cow, new List<CharacterOverworld>(0));
+            this.distributedMaximizedStatDummys = InventoryCalculatorHelper.GetMaximizeStatLoadout(cow, cow
                 .GetLinkedPlayers(false)
                 .Where(lp => this.characterShareTracker.Get(lp.m_CharacterStats.m_CharacterName))
                 .ToList()
@@ -417,6 +416,15 @@ public partial class UILoadoutManager
         }
 
         UpdateButtonDisplay(cow);
+    }
+
+    private void UpdateTooltipOffset(uiToolTipGeneral tooltip)
+    {
+        var newlines = tooltip.m_DetailInfo.Count(c => c == '\n');
+        var verticalShift = newlines <= 1
+            ? 60
+            : (90 + newlines * NewLineMod) * TransformExtensions.ResolutionFactorY;
+        tooltip.m_ToolTipOffset = new Vector2(0, -verticalShift);
     }
 
     private void UpdateButtonDisplay(CharacterOverworld cow)

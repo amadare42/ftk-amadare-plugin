@@ -1,4 +1,6 @@
-﻿namespace AmadarePlugin.Features.Loadouts.MaximizeStats;
+﻿using MonoMod.Utils;
+
+namespace AmadarePlugin.Features.Loadouts.MaximizeStats;
 
 public enum StatType
 {
@@ -10,12 +12,25 @@ public enum StatType
     Talent,
     Luck,
     
-    // GoldMultiplayer,
-    // CritChance,
+    GoldMultiplayer,
+    Crit,
     
     COUNT
     
     // Armor,
     // Resistance,
     // Evade
+}
+
+public static class StatTypeExtensions
+{
+    public static string ToFriendlyString(this StatType stat)
+    {
+        if (stat == StatType.GoldMultiplayer)
+        {
+            return "Gold Mult.";
+        }
+        
+        return stat.ToString("G").SpacedPascalCase();
+    }
 }

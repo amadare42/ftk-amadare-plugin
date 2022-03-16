@@ -55,6 +55,8 @@
     <None Update="manifest.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Remove="Resources\Icons\iconCrit.png" />
+    <EmbeddedResource Include="Resources\Icons\iconCrit.png" />
   </ItemGroup>
   
   <ItemGroup>

@@ -23,7 +23,6 @@ public partial class UILoadoutManager
     private Dictionary<StatType, FittingCharacterStats> maximizedStatDummys =>
         this.IsShiftPressed ? this.distributedMaximizedStatDummys : this.localStatDummys;
 
-    private readonly MaximizeStatService maximizeStatService;
     private ShowMoreButton showMoreBtn;
     
     
@@ -74,12 +73,12 @@ public partial class UILoadoutManager
         var tooltip = go.AddComponent<uiToolTipGeneral>();
         tooltip.m_IsFollowHoriz = true;
         tooltip.m_ReturnRawInfo = true;
-        tooltip.m_Info = $"Maximize {stat:G}";
+        tooltip.m_Info = $"Maximize {stat.ToFriendlyString()}";
         tooltip.m_ToolTipOffset = new Vector2(0, -40);
 
         var button = go.AddComponent<MaximizeStatButton>();
         button.Init(
-            RuntimeResources.Get<Sprite>(MaximizeStatService.StatToIconMap[stat]),
+            RuntimeResources.Get<Sprite>(InventoryCalculatorHelper.StatToIconMap[stat]),
             tooltip,
             stat,
             OnMaximizedLoadoutClick,
@@ -143,8 +142,14 @@ public partial class UILoadoutManager
             button.gameObject.SetActive(visible);
             if (visible)
             {
-                button.tooltip.m_Info = $"Maximize {button.stat:G} (<color=green>{increase}</color>)";
+                var increaseText = button.stat switch
+                {
+                    StatType.Crit or StatType.GoldMultiplayer => $"{increase}%",
+                    _ => increase.ToString()
+                };
+                button.tooltip.m_Info = $"Maximize {button.stat.ToFriendlyString()} (<color=green>{increaseText}</color>)";
                 button.tooltip.m_DetailInfo = GetMaximizeLoadoutTooltipText(cow, stats);
+                UpdateTooltipOffset(button.tooltip);
             }
         }
     }
@@ -153,8 +158,8 @@ public partial class UILoadoutManager
     {
         if (this.maximizedStatDummys.TryGetValue(statType, out stats))
         {
-            var potentialValue = Mathf.Clamp(MaximizeStatService.GetStatValue(statType, stats), 0, 0.95f);
-            var currentValue = MaximizeStatService.GetStatValue(statType, cow.m_CharacterStats);
+            var potentialValue = Mathf.Clamp(InventoryCalculatorHelper.GetStatValue(statType, stats), 0, 0.95f);
+            var currentValue = InventoryCalculatorHelper.GetStatValue(statType, cow.m_CharacterStats);
             if (potentialValue > currentValue)
             {
                 return (int)Math.Round(potentialValue * 100, 0);

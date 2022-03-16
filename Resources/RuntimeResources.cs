@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace AmadarePlugin.Resources;
@@ -66,6 +68,8 @@ public static class RuntimeResources
 
         // font
         Load<Font>(FontKeys, ref  renamedCount);
+
+        LoadEmbeddedIcons();
         
         Plugin.Log.LogInfo($"Found {dict.Count - renamedCount}(+{renamedCount} renamed)/{SpriteKeys.Count + FontKeys.Count} runtime resources.");
         IsInited = true;
@@ -87,5 +91,41 @@ public static class RuntimeResources
                 }
             }
         }
+    }
+    
+    private static void LoadEmbeddedIcons()
+    {
+        var prefix = "AmadarePlugin.Resources.Icons.";
+        
+        foreach (var manifestName in Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(n => n.StartsWith(prefix)))
+        {
+            var sprite = LoadNewSprite(manifestName);
+            var lookupName = manifestName
+                .Replace(prefix, "")
+                .Replace(".png", "");
+            dict[lookupName] = sprite;
+            Plugin.Log.LogInfo($"Loaded asset '{manifestName}' as '{lookupName}'");
+        }
+    }
+    
+    public static Sprite LoadNewSprite(string manifestName, float ppu = 100.0f)
+    {
+        var bytes = ToByteArray(Assembly.GetExecutingAssembly().GetManifestResourceStream(manifestName));
+        var tex = LoadTexture(bytes);
+        var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),new Vector2(.5f,.5f), ppu, 1, SpriteMeshType.FullRect);
+        sprite.border.Set(5,5,5,5);
+ 
+        return sprite;
+    }
+    
+    public static byte[] ToByteArray(Stream input) => new BinaryReader(input).ReadBytes((int)input.Length);
+
+    public static Texture2D LoadTexture(byte[] bytes) {
+ 
+        var tex2D = new Texture2D(2, 2);
+        if (tex2D.LoadImage(bytes))
+            return tex2D;
+        Plugin.Log.LogWarning("Error when loading load texture!");
+        return null; 
     }
 }

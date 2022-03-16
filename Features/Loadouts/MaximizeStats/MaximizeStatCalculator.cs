@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
 
@@ -186,56 +185,6 @@ public class AggregateItem : IItemContainer
 
         return $"[{this.ContainerId:G}] [{this.Items.Length}]: {this.Score} {this.ItemId}({(int)this.ItemId}) {(this.IsTwoHanded ? "TH" : "")} {(this.IsOneHanded ? "SH" : "")}";
     }
-}
-
-public class InventoryCalculatorHelper
-{
-    private static MaximizeStatCalculator calculator = new();
-    private static HandsCalculatorContextFactory contextFactory = new();
-    private static readonly Dictionary<StatType, Func<FTK_characterModifier, float>> accessorsMap = new()
-    {
-        [StatType.Strength] = mods => mods?.m_ModToughness ?? 0,
-        [StatType.Intelligence] = mods => mods?.m_ModFortitude ?? 0,
-        [StatType.Awareness] = mods => mods?.m_ModAwareness ?? 0,
-        [StatType.Vitality] = mods => mods?.m_ModVitality ?? 0,
-        [StatType.Speed] = mods => mods?.m_ModQuickness ?? 0,
-        [StatType.Talent] = mods => mods?.m_ModTalent ?? 0,
-        [StatType.Luck] = mods => mods?.m_ModLuck ?? 0,
-        
-        // [StatType.Armor] = mods => mods.m_ModDefensePhysical + mods.m_PartyCombatArmor,
-        // [StatType.Resistance] = mods => mods.m_ModDefenseMagic + mods.m_PartyCombatResist,
-        // [StatType.Evade] = mods => mods.m_ModEvadeRating + mods.m_PartyCombatEvade,
-    };
-    
-    public static DistributedLoadout CalculateBestForStat(CharacterOverworld cow, List<CharacterOverworld> linkedCows, StatType statType)
-    {
-        var accessor = accessorsMap[statType];
-        var ctx = contextFactory.Create(cow, linkedCows, accessor, statType);
-        calculator.Calculate(ctx);
-        var distributedLoadout = new DistributedLoadout
-        {
-            Loadout = ctx.Loadout,
-            OwnersMap = CreateOwnersMap(cow, linkedCows, ctx.Loadout)
-        };
-        return distributedLoadout;
-    }
-
-    private static Dictionary<FTK_itembase.ID, CharacterOverworld> CreateOwnersMap(CharacterOverworld cow, List<CharacterOverworld> linkedCows, Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID> loadout)
-    {
-        var ownersMap = new Dictionary<FTK_itembase.ID, CharacterOverworld>(loadout.Count);
-        foreach (var pair in loadout)
-        {
-            var itemId = pair.Value;
-            
-            // NOTE: this is working only for backpack items
-            ownersMap[itemId] = cow.HasInventoryItem(itemId)
-                ? cow
-                : linkedCows.FirstOrDefault(c => c.HasInventoryItem(itemId));
-        }
-
-        return ownersMap;
-    }
-    
 }
 
 public class DistributedLoadout
