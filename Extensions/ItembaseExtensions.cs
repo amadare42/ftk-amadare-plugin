@@ -1,7 +1,8 @@
+using AmadarePlugin.Common;
 using Google2u;
 using GridEditor;
 
-namespace AmadarePlugin.Loadouts;
+namespace AmadarePlugin.Extensions;
 
 public static class ItembaseExtensions
 {
@@ -61,12 +62,7 @@ public static class ItembaseExtensions
     
     public static FTK_itembase.ID GetId(this FTK_itembase item)
     {
-        if (item == null)
-        {
-            Plugin.Log.LogWarning("GetId: null");
-            return FTK_itembase.ID.None;
-        }
-        return FTK_itembase.GetEnum(item.m_ID);
+        return CachedDB.GetItemId(item);
     }
 
     public static bool HasItemsIn(this PlayerInventory inventory, PlayerInventory.ContainerID containerId)

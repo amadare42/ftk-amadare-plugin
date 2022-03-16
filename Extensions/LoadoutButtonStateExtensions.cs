@@ -1,4 +1,4 @@
-using AmadarePlugin.Loadouts.UI.Behaviors;
+using AmadarePlugin.Features.Loadouts.UI.Behaviors;
 
 namespace AmadarePlugin.Extensions;
 

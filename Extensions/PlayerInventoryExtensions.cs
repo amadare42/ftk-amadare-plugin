@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using AmadarePlugin.Loadouts;
+using AmadarePlugin.Common;
 
 namespace AmadarePlugin.Extensions;
 
@@ -9,7 +9,7 @@ public static class PlayerInventoryExtensions
     {
         var dictionary = new Dictionary<PlayerInventory.ContainerID, ItemContainer>();
         
-        foreach (var ctId in HelperProperties.EquipableContainers)
+        foreach (var ctId in FtkHelpers.EquipableContainers)
         {
             dictionary[ctId] = inventory.Get(ctId);
         }

@@ -7,6 +7,8 @@ namespace AmadarePlugin.Resources;
 public static class RuntimeResources
 {
     private static Dictionary<string, Object> dict = new();
+    
+    public static bool IsInited { get; private set; }
 
     private static List<string> SpriteKeys = new() {
         "iconAwareness",
@@ -39,9 +41,22 @@ public static class RuntimeResources
         { "unavailable_normal", "buttonGeneric3" },
     };
 
-    public static T Get<T>(string key) where T : Object => (T)dict[key];
+    public static T Get<T>(string key) where T : Object
+    {
+        AssertInited();
+        return (T)dict[key];
+    }
 
-    public static void Init()
+    public static void AssertInited()
+    {
+        if (!IsInited)
+        {
+            Plugin.Log.LogDebug("AssertInited: Start init");
+            Init();
+        }
+    }
+
+    private static void Init()
     {
         var renamedCount = 0;
         
@@ -52,7 +67,8 @@ public static class RuntimeResources
         // font
         Load<Font>(FontKeys, ref  renamedCount);
         
-        Plugin.Log.LogInfo($"Found {dict.Count - renamedCount}(+{renamedCount} renamed)/{SpriteKeys.Count} runtime resources.");
+        Plugin.Log.LogInfo($"Found {dict.Count - renamedCount}(+{renamedCount} renamed)/{SpriteKeys.Count + FontKeys.Count} runtime resources.");
+        IsInited = true;
     }
 
     private static void Load<T>(List<string> keys, ref int renamedCount) where T : Object

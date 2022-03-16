@@ -14,6 +14,7 @@ public static class OptionsManager
     public static bool DisplayPoisonTurns;
     public static bool DebugLogging = false;
     public static bool ShowBasePrice = false;
+    public static bool AlwaysShare = false;
 
     public static void Init(ConfigFile configFile)
     {
@@ -44,6 +45,9 @@ public static class OptionsManager
             .Value;
         MaximizeStatButtons = configFile.Bind("Loadouts", "Maximize Stat Buttons", true,
                 "If enabled, auto-generated loadouts would be displayed that would maximize specific stat")
+            .Value;
+        AlwaysShare = configFile.Bind("Loadouts", "Always Share", false,
+                "If enabled, each character is considered \"share-enabled\", so no checkbox will be present.")
             .Value;
         
         DebugLogging = configFile.Bind("Debug", "Enable debug logging", false,

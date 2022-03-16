@@ -1,4 +1,6 @@
-﻿using AmadarePlugin.Loadouts;
+﻿using AmadarePlugin.Common;
+using AmadarePlugin.Features;
+using AmadarePlugin.Features.Loadouts;
 using AmadarePlugin.Options;
 using BepInEx;
 using BepInEx.Logging;
@@ -19,6 +21,7 @@ namespace AmadarePlugin
         {
             Instance = this;
             OptionsManager.Init(this.Config);
+            CachedDB.Init();
 
             SteamFixer.Run();
             SkipIntro.Run();
