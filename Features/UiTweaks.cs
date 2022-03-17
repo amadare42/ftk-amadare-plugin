@@ -30,7 +30,7 @@ public class UiTweaks
     {
         if (OptionsManager.HighlightOneTimeEncounters)
         {
-            return$"{orig(self)}\n<color=#555555>This encounter {(self.m_DestroyOnLeave ? "WILL" : "WILL NOT")} disappear on leave</color>";
+            return $"{orig(self)}\n<color=#555555>This encounter {(self.m_DestroyOnLeave ? "WILL" : "WILL NOT")} disappear on leave</color>";
         }
 
         return orig(self);

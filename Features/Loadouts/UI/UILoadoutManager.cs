@@ -518,7 +518,7 @@ public partial class UILoadoutManager
         if (FtkHelpers.IsInventoryOwner)
         {
             sharedStringBuilder.AppendLine()
-                .Append("<color=#444444>LMB to equip; MMB to clear; RMB to save</color>");
+                .Append("<color=#444444>LMB to equip; MMB to clear; RMB to override</color>");
         }
 
         return sharedStringBuilder.ToString();
