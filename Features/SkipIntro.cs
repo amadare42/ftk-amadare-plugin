@@ -4,7 +4,7 @@ namespace AmadarePlugin.Features;
 
 public static class SkipIntro
 {
-    public static void Run()
+    public static void Init()
     {
         if (!OptionsManager.SkipIntro) return;
         

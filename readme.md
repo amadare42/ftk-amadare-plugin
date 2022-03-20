@@ -29,7 +29,8 @@ Detailed features overview can be found below.
 
 1. Install latest [Bepinex](https://github.com/BepInEx/BepInEx/releases) 5.* version. You can refer to installation instructions [here](https://docs.bepinex.dev/articles/user_guide/installation/index.html)
 2. Either install HookGenPatcher or add `MMHOOK_Assembly-CSharp.dll` to `BepInEx\plugins` folder from [this repo](https://github.com/ftk-modding/stripped-binaries)
-3. Start game normally
+3. Install [FTKAPI](https://github.com/ftk-modding/ftkapi/releases)
+4. Start game normally
 
 
 ## Equipement loadouts
@@ -118,8 +119,9 @@ You can also access some settings using in-game menu:
    - When cloning this repository use `git clone --recurse-submodules`
    - OR If repository is already checked out, use `git submodule update --init --recursive`
    - OR Download or build them yourself using instructions from [this repo](https://github.com/ftk-modding/stripped-binaries)
-2. (optional) Set `BuiltPluginDestPath` property in project file so after build binaries will be copied to specified location.
-3. You should be able to build solution now
+2. Download and extract [FTKAPI](https://github.com/ftk-modding/ftkapi/releases/) to Libs/FTKAPI directory
+3. (optional) Set `BuiltPluginDestPath` property in project file so after build binaries will be copied to specified location.
+4. You should be able to build solution now
 
 ## License
 

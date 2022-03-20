@@ -1,15 +1,33 @@
-﻿namespace AmadarePlugin.Common;
+﻿using AmadarePlugin.Extensions;
+
+namespace AmadarePlugin.Common;
 
 public static class FtkHelpers
 {
-    public static CharacterOverworld InventoryOwner => FTKUI.Instance.m_PlayerInventory.m_InventoryOwner;
-    public static string InventoryOwnerName => FTKUI.Instance.m_PlayerInventory.m_InventoryOwner.GetCowUniqueName();
+    public static CharacterOverworld InventoryOwnerCow => FTKUI.Instance.m_PlayerInventory.m_InventoryOwner;
+    public static string InventoryOwnerUniqueName => InventoryOwnerCow.GetCowUniqueName();
     public static bool IsInventoryOpen => uiPlayerInventory.Instance.m_IsShowing;
 
-    public static string InventoryCharacterName =>
-        FTKUI.Instance.m_PlayerInventory.m_InventoryOwner.m_CharacterStats.m_CharacterName;
 
-    public static bool IsInventoryOwner => FTKUI.Instance.m_PlayerInventory.m_InventoryOwner.IsOwner || GameLogic.Instance.IsSinglePlayer();
+    public static CharacterOverworld FindByUniqueName(string uniqueName)
+    {
+        const string prefix = "COW_IDX_";
+        if (uniqueName.StartsWith(prefix) 
+            && int.TryParse(uniqueName.Substring(prefix.Length), out int idx)
+            && idx >= 0
+            && FTKHub.gInstance.IsOk()
+            && FTKHub.Instance.m_CharacterOverworlds.Count > idx
+        )
+        {
+            return FTKHub.Instance.m_CharacterOverworlds[idx];
+        }
+        
+        Plugin.Log.LogWarning($"Cannot find COW by unique name '{uniqueName}'.");
+
+        return null;
+    }
+
+    public static bool IsInventoryOwner => InventoryOwnerCow.IsOwner || GameLogic.Instance.IsSinglePlayer();
 
     public static bool IsActivePlayer
     {

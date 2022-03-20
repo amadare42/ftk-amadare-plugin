@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using AmadarePlugin.Options;
+using AmadarePlugin.Common;
 using AmadarePlugin.Saving;
 using Newtonsoft.Json;
 
@@ -16,7 +16,9 @@ public class CharacterShareTracker
     /// Tracks which characters are having "Share" checkbox enabled.
     /// </summary>
     private Dictionary<string, bool> shareDict = new();
-    
+
+    private HashSet<int> alwaysShareOwners = new(); 
+
     public CharacterShareTracker(GameSaveInterceptor saveInterceptor)
     {
         saveInterceptor.OnGameSerializing += (sender, args) => args.AddEntry(ShareDictKey, JsonConvert.SerializeObject(this.shareDict));
@@ -35,9 +37,22 @@ public class CharacterShareTracker
 
     public void Set(string name, bool shared) => this.shareDict[name] = shared;
 
+    public void SetAlwaysShare(int ownerId, bool value)
+    {
+        if (value)
+        {
+            this.alwaysShareOwners.Add(ownerId);
+        }
+        else
+        {
+            this.alwaysShareOwners.Remove(ownerId);
+        }
+    }
+
     public bool Get(string name)
     {
-        if (OptionsManager.AlwaysShare)
+        var cow = FtkHelpers.FindByUniqueName(name);
+        if (cow != null && alwaysShareOwners.Contains(cow.m_PhotonView.ownerId))
         {
             return true;
         }

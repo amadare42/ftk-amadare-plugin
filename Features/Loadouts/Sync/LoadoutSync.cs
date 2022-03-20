@@ -1,52 +1,94 @@
+﻿using System.Collections.Generic;
+using AmadarePlugin.Common;
+using AmadarePlugin.Options;
+using GridEditor;
+using Photon;
+using UnityEngine;
 
 namespace AmadarePlugin.Features.Loadouts.Sync;
 
-public class LoadoutSync : Photon.PunBehaviour
+public class LoadoutSync : PunBehaviour
 {
-    public LoadoutRepository LoadoutRepository { get; set; }
-    public LoadoutManager Manager { get; set; }
-    public CharacterShareTracker ShareTracker { get; set; }
+    public static LoadoutSync Current;
 
-    public void PushLoadout()
+    private LoadoutRepository loadoutRepository;
+    private CharacterShareTracker shareTracker;
+    private LoadoutManager loadoutManager;
+
+    public static void Init()
     {
-        Plugin.Log.LogInfo("PushLoadout: calling RPC");
-        this.photonView.RPC(nameof(ReceiveLoadoutsRPC), PhotonTargets.Others,
-            this.LoadoutRepository.Serialize(),
-            this.ShareTracker.Serialize()
+        On.uiStartGame.StartGame += OnGameStart;
+    }
+
+    private static void OnGameStart(On.uiStartGame.orig_StartGame orig, uiStartGame self)
+    {
+        Utils.SafeInvoke(() => orig(self), () => {
+            if (self.IsMasterClient)
+            {
+                Plugin.Log.LogInfo("OnGameStart: Pushing state");
+                Current.Push();
+            }
+        });
+    }
+
+    public static GameObject Instantiate(GameObject gameObject, 
+        LoadoutRepository loadoutRepository, 
+        CharacterShareTracker shareTracker,
+        LoadoutManager loadoutManager)
+    {
+        Current = gameObject.AddComponent<LoadoutSync>();
+        Current.loadoutRepository = loadoutRepository;
+        Current.shareTracker = shareTracker;
+        Current.loadoutManager = loadoutManager;
+        Plugin.Log.LogInfo("LoadoutSync crated!");
+        return gameObject;
+    }
+
+    public void Push(bool buffered = false)
+    {
+        this.shareTracker.SetAlwaysShare(PhotonNetwork.player.ID, OptionsManager.AlwaysShare);
+        this.photonView.RPC(nameof(ReceiveFullState), 
+            buffered ? PhotonTargets.OthersBuffered : PhotonTargets.Others,
+            this.loadoutRepository.Serialize(),
+            this.shareTracker.Serialize(),
+            OptionsManager.AlwaysShare
         );
     }
 
     [PunRPC]
-    public void ReceiveLoadoutsRPC(string data, string shareData)
+    public void ReceiveFullState(string loadouts, string shares, bool alwaysShare, PhotonMessageInfo info)
     {
-        Plugin.Log.LogInfo("ReceiveLoadoutsRPC: RPC called");
-        Plugin.Log.LogInfo(data);
-        Plugin.Log.LogInfo(shareData);
-        this.LoadoutRepository.Load(data);
-        this.ShareTracker.Load(shareData);
-        this.Manager.OnLoadoutReceived();
+        this.loadoutRepository.Load(loadouts);
+        this.shareTracker.SetAlwaysShare(info.sender.ID, alwaysShare);
+        this.shareTracker.Load(shares);
+        this.loadoutManager.OnLoadoutReceived();
     }
 
-    public void RequestLoadout()
+    public void PushShareChange(string name, bool value)
     {
-        Plugin.Log.LogInfo("RequestLoadoutRPC: requesting loadout data...");
-        this.photonView.RPC(nameof(RequestLoadoutRPC), PhotonTargets.MasterClient);
+        this.photonView.RPC(nameof(ReceiveShareChange), PhotonTargets.Others,
+            name, value
+        );
     }
 
     [PunRPC]
-    public void RequestLoadoutRPC()
+    public void ReceiveShareChange(string name, bool value)
     {
-        Plugin.Log.LogInfo("RequestLoadoutRPC: loadout data requested");
-        PushLoadout();
+        this.shareTracker.Set(name, value);
+        this.loadoutManager.OnShareChanged();
     }
 
-    public void OnStart()
+    public void PushCharacterLoadouts(string name)
     {
-        Plugin.Log.LogInfo($"{nameof(LoadoutSync)} created!");
+        this.photonView.RPC(nameof(ReceiveCharacterLoadouts), PhotonTargets.Others,
+            name, this.loadoutRepository.GetAllSlots(name)
+        );
     }
 
-    public void OnDestroy()
+    [PunRPC]
+    public void ReceiveCharacterLoadouts(string name, Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[] loadouts)
     {
-        Plugin.Log.LogInfo($"{nameof(LoadoutSync)} destroyed!");
+        this.loadoutRepository.SetAllSlots(name, loadouts);
+        this.loadoutManager.OnLoadoutReceived();
     }
 }

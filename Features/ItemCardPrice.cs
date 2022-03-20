@@ -1,8 +1,8 @@
 ﻿using System;
 using AmadarePlugin.Common;
-using AmadarePlugin.Extensions;
 using AmadarePlugin.Options;
 using AmadarePlugin.Resources;
+using FTKAPI.Utils;
 using GridEditor;
 using UnityEngine;
 using UnityEngine.UI;

@@ -42,6 +42,7 @@ public class GameSaveInterceptor
                     Plugin.Log.LogDebug("Loading loadouts prevented - not in loading game mode");
                     return res;
                 }
+                Plugin.Log.LogDebug("Loading loadouts...");
                 this.OnGameDeserializing?.Invoke(this, new GameDeserializingEventArgs(data.AsDictionary));
             }
 

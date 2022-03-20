@@ -26,7 +26,8 @@ public static class RuntimeResources
         "coins"
     };
     private static List<string> FontKeys = new() {
-        "Kingthings Petrock"
+        "Kingthings Petrock",
+        "RobotoCondensed-Light"
     };
     
     private static readonly Dictionary<string, string> RenamedSprites = new()

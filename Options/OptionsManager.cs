@@ -1,4 +1,8 @@
-﻿using BepInEx.Configuration;
+﻿using System.Linq;
+using AmadarePlugin.Extensions;
+using AmadarePlugin.Features.Loadouts.Sync;
+using BepInEx.Configuration;
+using FTKAPI.Managers;
 
 namespace AmadarePlugin.Options;
 
@@ -20,7 +24,7 @@ public static class OptionsManager
     public static BindCollection bindGeneral;
     public static BindCollection bindLoadouts;
 
-    public static void Init(ConfigFile configFile, PluginOptionsUi pluginOptionsUi)
+    public static void Init(ConfigFile configFile)
     {
         configFile.SaveOnConfigSet = true;
         
@@ -82,7 +86,11 @@ public static class OptionsManager
                 key: "Always Share",
                 description:
                 "If enabled, each character is considered \"share-enabled\", so no checkbox will be present.",
-                set: v => AlwaysShare = v,
+                set: v =>
+                {
+                    AlwaysShare = v;
+                    if (LoadoutSync.Current.IsOk()) LoadoutSync.Current.Push();
+                },
                 defaultValue: false);
 
         configFile.BindCollection("Debug")
@@ -97,7 +105,9 @@ public static class OptionsManager
                 set: v => AddSteamAppId = v,
                 defaultValue: true);
         
-        pluginOptionsUi.RegisterBindings(bindGeneral.Bindings);
-        pluginOptionsUi.RegisterBindings(bindLoadouts.Bindings);
+        foreach (var entry in bindGeneral.Bindings.Concat(bindLoadouts.Bindings))
+        {
+            PluginConfigManager.RegisterBinding(entry);
+        }
     }
 }

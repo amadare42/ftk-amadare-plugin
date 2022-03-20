@@ -1,4 +1,4 @@
-﻿using AmadarePlugin.Extensions;
+﻿using FTKAPI.Utils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;

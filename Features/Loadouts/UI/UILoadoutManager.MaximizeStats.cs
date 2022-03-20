@@ -8,6 +8,7 @@ using AmadarePlugin.Features.Loadouts.MaximizeStats;
 using AmadarePlugin.Features.Loadouts.UI.Behaviors;
 using AmadarePlugin.Options;
 using AmadarePlugin.Resources;
+using FTKAPI.Utils;
 using SimpleBind.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
@@ -108,7 +109,7 @@ public partial class UILoadoutManager
     {
         if (this.maximizedStatDummys.TryGetValue(stat, out var dummy) && dummy.Loadout != null)
         {
-            this.callbacks.LoadLoadout(FtkHelpers.InventoryOwner, dummy.Loadout, this.IsShiftPressed);
+            this.callbacks.LoadLoadout(FtkHelpers.InventoryOwnerCow, dummy.Loadout, this.IsShiftPressed);
         }
     }
     
@@ -171,6 +172,6 @@ public partial class UILoadoutManager
 
     private void OnKeyPressChanged(KeyListener listener)
     {
-        UpdateMaximizeStatsButtons(FtkHelpers.InventoryOwner);
+        UpdateMaximizeStatsButtons(FtkHelpers.InventoryOwnerCow);
     }
 }

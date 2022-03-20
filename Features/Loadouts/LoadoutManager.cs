@@ -4,7 +4,6 @@ using AmadarePlugin.Common;
 using AmadarePlugin.Extensions;
 using AmadarePlugin.Features.Loadouts.Sync;
 using AmadarePlugin.Features.Loadouts.UI;
-using AmadarePlugin.Saving;
 using GridEditor;
 using LoadoutDict = System.Collections.Generic.Dictionary<PlayerInventory.ContainerID, GridEditor.FTK_itembase.ID>;
 
@@ -15,42 +14,19 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
     public const int SlotsCount = 5;
     
     private LoadoutRepository Loadouts;
-    private SyncService sync;
-    private UILoadoutManager ui;
-    private GameSaveInterceptor gameSaveInterceptor;
+    private readonly UILoadoutManager ui;
     private AssignToAllLoadoutsButton assignToAllButton;
     private CharacterShareTracker shareTracker;
 
-    public void Init()
+    public LoadoutManager(CharacterShareTracker shareTracker, LoadoutRepository loadoutRepository)
     {
-        this.gameSaveInterceptor = new GameSaveInterceptor();
-        this.Loadouts = new LoadoutRepository(this.gameSaveInterceptor);
-        this.shareTracker = new CharacterShareTracker(this.gameSaveInterceptor);
-        this.sync = new SyncService(this.Loadouts, this, this.shareTracker);
-        this.ui = new UILoadoutManager(this, this.Loadouts, this.shareTracker, this.sync);
+        this.shareTracker = shareTracker;
+        this.Loadouts = loadoutRepository;
+        this.ui = new UILoadoutManager(this, this.Loadouts, this.shareTracker);
         this.assignToAllButton = new AssignToAllLoadoutsButton();
 
         this.assignToAllButton.OnAssignToAllLoadoutsClick += AssignToAllLoadouts;
         On.GameLogic.RestartFadeOutFinish += GameLogicOnRestartFadeOutFinish;
-        On.uiStartGame.EnterFahrul += OnEnterFahrul;
-        On.uiPlayerInventory.ShowCharacterInventory += (orig, self, cow, cycler) =>
-        {
-            orig(self, cow, cycler);
-            if (this.sync.SyncRequired)
-            {
-                Plugin.Log.LogInfo("Sync required");
-                this.sync.RequestSync();
-            }
-        };
-    }
-
-    private void OnEnterFahrul(On.uiStartGame.orig_EnterFahrul orig, uiStartGame self)
-    {
-        orig(self);
-        if (self.IsMasterClient)
-        {
-            this.sync.AssertObjectCreated();
-        }
     }
 
     private void GameLogicOnRestartFadeOutFinish(On.GameLogic.orig_RestartFadeOutFinish orig, GameLogic self)
@@ -75,7 +51,7 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
 
         var linkedCows = isDistributed
             ? cow.GetLinkedPlayers(false)
-                .Where(lp => this.shareTracker.Get(lp.m_CharacterStats.m_CharacterName))
+                .Where(lp => this.shareTracker.Get(lp.GetCowUniqueName()))
                 .ToList()
             : new List<CharacterOverworld>(0);
 
@@ -181,7 +157,7 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
         var cow = FTKUI.Instance.m_PlayerInventory.m_InventoryOwner;
         this.Loadouts.Clear(cow.GetCowUniqueName(), idx);
         this.ui.UpdateLoadoutButtonsState(cow);
-        this.sync.SyncLoadouts();
+        LoadoutSync.Current.PushCharacterLoadouts(cow.GetCowUniqueName());
     }
 
     public void SaveSlot(int idx)
@@ -197,7 +173,7 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
         var loadout = GetCurrentLoadout(cow);
         this.Loadouts.Set(cow.GetCowUniqueName(), idx, loadout);
         this.ui.UpdateLoadoutButtonsState(cow);
-        this.sync.SyncLoadouts();
+        LoadoutSync.Current.PushCharacterLoadouts(cow.GetCowUniqueName());
     }
 
     private static LoadoutDict GetCurrentLoadout(CharacterOverworld cow)
@@ -218,7 +194,7 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
     
     public void AssignToAllLoadouts(FTK_itembase item)
     {
-        var loadouts = this.Loadouts.GetAllSlots(FtkHelpers.InventoryOwnerName);
+        var loadouts = this.Loadouts.GetAllSlots(FtkHelpers.InventoryOwnerUniqueName);
         var containerID = item.m_ObjectType.GetContainer();
         foreach (var loadout in loadouts)
         {
@@ -238,17 +214,26 @@ public class LoadoutManager : ILoadoutButtonsCallbacks
             loadout[containerID] = item.GetId();
         }
 
-        this.Loadouts.SetAllSlots(FtkHelpers.InventoryOwnerName, loadouts);
-        this.sync.SyncLoadouts();
+        this.Loadouts.SetAllSlots(FtkHelpers.InventoryOwnerUniqueName, loadouts);
+        LoadoutSync.Current.PushCharacterLoadouts(FtkHelpers.InventoryOwnerUniqueName);
         AudioManager.Instance.AudioEvent("Play_gui_ex_equip");
-        this.ui.UpdateLoadoutButtonsState(FtkHelpers.InventoryOwner);
+        this.ui.UpdateLoadoutButtonsState(FtkHelpers.InventoryOwnerCow);
     }
 
     public void OnLoadoutReceived()
     {
         if (FtkHelpers.IsInventoryOpen)
         {
-            this.ui.UpdateLoadoutButtonsState(FtkHelpers.InventoryOwner);
+            this.ui.UpdateLoadoutButtonsState(FtkHelpers.InventoryOwnerCow);
+            Plugin.Log.LogDebug("Updated inventory due to sync");
+        }
+    }
+    
+    public void OnShareChanged()
+    {
+        if (FtkHelpers.IsInventoryOpen)
+        {
+            this.ui.UpdateShareCheckbox();
             Plugin.Log.LogDebug("Updated inventory due to sync");
         }
     }

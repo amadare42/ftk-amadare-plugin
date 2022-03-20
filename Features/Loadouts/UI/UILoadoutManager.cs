@@ -10,6 +10,7 @@ using AmadarePlugin.Features.Loadouts.Sync;
 using AmadarePlugin.Features.Loadouts.UI.Behaviors;
 using AmadarePlugin.Options;
 using AmadarePlugin.Resources;
+using FTKAPI.Utils;
 using GridEditor;
 using SimpleBind.Utilities;
 using UnityEngine;
@@ -25,7 +26,6 @@ public partial class UILoadoutManager
     private readonly ILoadoutButtonsCallbacks callbacks;
     private readonly LoadoutRepository loadouts;
     private readonly CharacterShareTracker characterShareTracker;
-    private readonly SyncService sync;
     private GameObject loadoutPanel = null;
     private LoadoutButton[] buttons = new LoadoutButton[LoadoutManager.SlotsCount];
     private Dictionary<LoadoutButtonState, ButtonStateSprites> ButtonStatesMap = new();
@@ -36,12 +36,11 @@ public partial class UILoadoutManager
     public bool IsShiftPressed => this.keyListener != null && this.keyListener.IsShiftPressed;
 
     public UILoadoutManager(ILoadoutButtonsCallbacks callbacks, LoadoutRepository loadouts,
-        CharacterShareTracker characterShareTracker, SyncService sync)
+        CharacterShareTracker characterShareTracker)
     {
         this.callbacks = callbacks;
         this.loadouts = loadouts;
         this.characterShareTracker = characterShareTracker;
-        this.sync = sync;
         
         On.uiPlayerInventory.ShowStats += OnShowStats;
         On.uiPlayerInventory.ShowCharacterInventory += OnShowCharacterInventory;
@@ -159,37 +158,18 @@ public partial class UILoadoutManager
             RuntimeResources.AssertInited();
             var rect = (RectTransform)self.gameObject.transform.Find("InventoryBackground").transform;
             InitLoadoutPanel(rect);
-            UpdateLoadoutButtonsState(cow);
         }
         else
         {
             this.loadoutPanel.SetActive(true);
         }
-
-        if (OptionsManager.AlwaysShare)
-        {
-            if (this.shareCheckbox) 
-            {
-                this.shareCheckbox.gameObject.SetActive(false);
-            }
-        }
-        else 
-        {
-            if (!this.shareCheckbox)
-            {
-                this.shareCheckbox = CreateShareCheckbox((RectTransform)this.loadoutPanel.transform);
-            }
-
-            this.shareCheckbox.gameObject.SetActive(true);
-            this.shareCheckbox.interactable = FtkHelpers.IsInventoryOwner;
-        }
-
+        
         UpdateLoadoutButtonsState(cow);
     }
 
     private bool IsInventoryOpenFor(CharacterOverworld cow)
     {
-        return FtkHelpers.InventoryOwner.m_FTKPlayerID.PhotonID == cow.m_FTKPlayerID.PhotonID;
+        return FtkHelpers.InventoryOwnerCow.m_FTKPlayerID.PhotonID == cow.m_FTKPlayerID.PhotonID;
     }
 
     private void InitLoadoutPanel(RectTransform parentRect)
@@ -225,31 +205,27 @@ public partial class UILoadoutManager
             this.buttons[i] = CreateButton(transform, i);
         }
 
-        if (!OptionsManager.AlwaysShare)
-        {
-            this.shareCheckbox = CreateShareCheckbox(parentRect);
-        }
-
         InitMaximizeStatButtons(transform);
     }
 
     private Toggle CreateShareCheckbox(RectTransform parent)
     {
+        parent = (RectTransform)GameObject.Find("uiRoot/uGuiMain/uiGameMain/inventoryTarget/uiPlayerInventory/InventoryBackground").transform;
         var shareCheckbox = UiFactory.CreateCheckBox(
             name: "Share", 
             tooltipTitle: "Share",
             tooltipDetails: "If enabled, this character's backpack content may be transferred automatically by loadouts.", 
-            value: this.characterShareTracker.Get(FtkHelpers.InventoryCharacterName)
+            value: this.characterShareTracker.Get(FtkHelpers.InventoryOwnerUniqueName)
         );
         var transform = (RectTransform)shareCheckbox.transform;
         
         transform.SetParent(parent);
-        transform.Scale(.8f);
-        transform.anchorMin = Vector2.zero;
-        transform.anchorMax = Vector2.one;
-        transform.anchoredPosition = new Vector2(-100, -315);
-        transform.sizeDelta = Vector2.zero;
+        transform.anchorMin = new Vector2(1, 1);
+        transform.anchorMax = new Vector2(1, 1);
+        transform.anchoredPosition = new Vector2(-100, -396);
         transform.pivot = new Vector2(1, .5f);
+        transform.localScale = new Vector3(.8f, .8f, 1);
+        transform.sizeDelta = Vector2.zero;
         
         var sizeFitter = shareCheckbox.AddComponent<ContentSizeFitter>();
         sizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -258,16 +234,15 @@ public partial class UILoadoutManager
 
         var toggle = shareCheckbox.GetComponent<Toggle>();
         toggle.onValueChanged.AddListener(OnSharedValueChanged);
-        toggle.interactable = FtkHelpers.IsInventoryOwner;
 
         return toggle;
     }
 
     private void OnSharedValueChanged(bool isShared)
     {
-        Plugin.Log.LogInfo($"On shared value changed {FtkHelpers.InventoryCharacterName} {isShared}");
-        this.characterShareTracker.Set(FtkHelpers.InventoryCharacterName, isShared);
-        this.sync.SyncLoadouts();
+        Plugin.Log.LogInfo($"On shared value changed {FtkHelpers.InventoryOwnerUniqueName} {isShared}");
+        this.characterShareTracker.Set(FtkHelpers.InventoryOwnerUniqueName, isShared);
+        LoadoutSync.Current.PushShareChange(FtkHelpers.InventoryOwnerUniqueName, isShared);
     }
 
     private void InitButtonStatesMap()
@@ -345,14 +320,14 @@ public partial class UILoadoutManager
 
     private void OnExpandedChanged(bool state)
     {
-        UpdateLoadoutButtonsState(FtkHelpers.InventoryOwner);
+        UpdateLoadoutButtonsState(FtkHelpers.InventoryOwnerCow);
     }
 
     private void OnBlur(LoadoutButton arg1, int arg2)
     {
         if (OptionsManager.TestFit)
         {
-            LoadoutFittingHelper.ResetDisplay(FtkHelpers.InventoryOwner);
+            LoadoutFittingHelper.ResetDisplay(FtkHelpers.InventoryOwnerCow);
         }
     }
 
@@ -360,7 +335,7 @@ public partial class UILoadoutManager
     {
         if (OptionsManager.TestFit)
         {
-            var cow = FtkHelpers.InventoryOwner;
+            var cow = FtkHelpers.InventoryOwnerCow;
             var loadout = this.loadouts.Get(cow.GetCowUniqueName(), idx);
             if (loadout.Count > 0)
             {
@@ -446,11 +421,30 @@ public partial class UILoadoutManager
         UpdateShareCheckbox();
     }
 
-    private void UpdateShareCheckbox()
+    public void UpdateShareCheckbox()
     {
-        if (this.shareCheckbox != null && this.shareCheckbox.gameObject != null)
+        if (!FtkHelpers.IsInventoryOpen)
+            return;
+        
+        var shouldExist = !FtkHelpers.IsInventoryOwner || !OptionsManager.AlwaysShare;
+        if (!shouldExist)
         {
-            this.shareCheckbox.isOn = this.characterShareTracker.Get(FtkHelpers.InventoryCharacterName);
+            if (this.shareCheckbox.IsOk())
+            {
+                this.shareCheckbox.gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            if (!this.shareCheckbox.IsOk())
+            {
+                Plugin.Log.LogInfo("Trying to update share checkbox before initialization. Initialize.");
+                this.shareCheckbox = CreateShareCheckbox((RectTransform)this.loadoutPanel.transform);
+            } 
+            
+            this.shareCheckbox.gameObject.SetActive(true);
+            this.shareCheckbox.interactable = FtkHelpers.IsInventoryOwner;
+            this.shareCheckbox.isOn = this.characterShareTracker.Get(FtkHelpers.InventoryOwnerUniqueName);
         }
     }
 
