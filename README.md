@@ -123,6 +123,16 @@ You can also access some settings using in-game menu:
 3. (optional) Set `BuiltPluginDestPath` property in project file so after build binaries will be copied to specified location.
 4. You should be able to build solution now
 
+## Version History
+
+### 0.1.1 
+
+Initial release
+
+### 0.1.0
+
+Messed up Thunderstore upload
+
 ## License
 
 MIT
