@@ -35,7 +35,7 @@ public class ItemCardPrice
 
             if (OptionsManager.ShowBasePrice)
             {
-                UpdatePrice(self, _itemid, _cow);
+                UpdatePriceLabel(self, _itemid, _cow, _mode);
             }
         }
         catch (Exception ex)
@@ -46,15 +46,17 @@ public class ItemCardPrice
         return r;
     }
 
-    private void UpdatePrice(uiInventoryItemDisplay itemDisplay, FTK_itembase.ID itemId, CharacterOverworld cow)
+    private void UpdatePriceLabel(uiInventoryItemDisplay itemDisplay, FTK_itembase.ID itemId, CharacterOverworld cow,
+        uiItemDetail.Mode mode)
     {
         var itembase = FTK_itembase.GetItemBase(itemId);
         var tuple = GetPricePanel((RectTransform)itemDisplay.gameObject.transform);
         var panel = tuple.Panel;
         var txt = tuple.Text;
 
-        // if item isn't sellable, disabled price panel
-        if (GameLogic.Instance.m_CantSellOrDiscardItems.Contains(itemId))
+        var shouldHide = GameLogic.Instance.m_CantSellOrDiscardItems.Contains(itemId)
+                         || mode == uiItemDetail.Mode.Shop;
+        if (shouldHide)
         {
             panel.SetActive(false);
             return;

@@ -1,5 +1,8 @@
 {
+  "name": "AmadareQoL",
   "description": "General Quality of Life improvements",
+  "version_number": "0.1.0",
+  "website_url": "https://github.com/amadare42/ftk-amadare-plugin",
   "dependencies": [
     "BepInEx-BepInExPack_ForTheKing-5.4.19",
     "Amadare-HookGenPatcher-1.2.1"

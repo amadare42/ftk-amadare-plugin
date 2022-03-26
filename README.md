@@ -19,7 +19,7 @@ Detailed features overview can be found below.
 
 ## Installation
 
-### Thunderstore (soon)
+### Thunderstore
 
 1. Install [Thunderstore Mod Manager](https://www.overwolf.com/app/Thunderstore-Thunderstore_Mod_Manager)
 2. Install `AmadareQoL` mod
@@ -37,7 +37,7 @@ Detailed features overview can be found below.
 
 Adds 5 slots to inventory to where you can save your loadouts to quickly switch between them.
 
-![loadouts](./readme/loadouts.png)
+![loadouts](https://raw.githubusercontent.com/amadare42/ftk-amadare-plugin/master/readme/loadouts.png)
 
 **Buttons explanation**
 - Red button means that some items from this loadout are missing in character inventory
@@ -55,7 +55,7 @@ If "Test Fit" is enabled, you'll see your character will-be stats when hovering 
 
 ## Maximise stats buttons
 
-![maximize stats](./readme/maximize-stats.png)
+![maximize stats](https://raw.githubusercontent.com/amadare42/ftk-amadare-plugin/master/readme/maximize-stats.png)
 
 If "Maximize Stat Buttons" option is enabled, you can extend buttons array by clicking arrow button. There will be displayed stat icons for all stats that can be maximized using available equipment. If there is no button for specific stat, then you cannot improve it using available equipment. 
 Green number will display stat will-be stat value.
@@ -64,7 +64,7 @@ If "Test Fit" is enabled, you'll see your character will-be stats when hovering 
 
 ### "Share" options
 
-![share](./readme/share.png)
+![share](https://raw.githubusercontent.com/amadare42/ftk-amadare-plugin/master/readme/share.png)
 
 When holding SHIFT, you will be able to use equipment not only from current character inventory but from all neighboring players. Note that character should have "Share" checkbox enabled to agree with giving you items.
 If you enable "Always Share" option, no checkbox will be displayed and every character will be able to share his items.
@@ -73,26 +73,26 @@ If you enable "Always Share" option, no checkbox will be displayed and every cha
 
 ### Better XP string
 
-![maximize stats](./readme/xpdisplay.png)
+![maximize stats](https://raw.githubusercontent.com/amadare42/ftk-amadare-plugin/master/readme/xpdisplay.png)
 
 If "Better XP string" option is enabled, game will display XP bar in more detailed format. In example above you can see that it is "155/600 (1755)". Where 155 is experience in current level, 600 is experience needed for next level and 1755 is total XP character have.
 
 ### Base Item Price
 
-![price](./readme/price.png)
+![price](https://raw.githubusercontent.com/amadare42/ftk-amadare-plugin/master/readme/price.png)
 
 If "Display price" option is enabled, for each sellable item tooltip, base price will be displayed. Please note that you'll never be able to sell item by this price in shops. But if character is located in place where selling is possible, this value will be precisely display for how much you can actually sell it.
 
 ### Display poison turns
 
-![poison](./readme/poison.png)
+![poison](https://raw.githubusercontent.com/amadare42/ftk-amadare-plugin/master/readme/poison.png)
 
 If "Display poison turns" option is enabled, you can check how many turns left until it wears off.
 
 
 ### Highlight one time encounters
 
-![highlight_encounters](./readme/highlight_encounters.png)
+![highlight_encounters](https://raw.githubusercontent.com/amadare42/ftk-amadare-plugin/master/readme/highlight_encounters.png)
 
 Sometimes it is unclear if encounter will remain on map after you visit it. So, if "Highlight one time encounters" option is enabled exclamation mark will be added to encounter name as well as small footnote on encounter screen. 
 
@@ -110,8 +110,8 @@ _(on screenshot it is displayed incorrectly - I changed encounter definition for
 You can configure mod either by using Thunderstore configuration (if installed through Thunderstore) or after first run by editing `BepInEx/config/AmadareQoL.cfg` file.
 You can also access some settings using in-game menu:
 
-![options button](./readme/options_button.png)
-![options menu](./readme/options_menu.png)
+![options button](https://raw.githubusercontent.com/amadare42/ftk-amadare-plugin/master/readme/options_button.png)
+![options menu](https://raw.githubusercontent.com/amadare42/ftk-amadare-plugin/master/readme/options_menu.png)
 
 ## Build
 

@@ -2,6 +2,7 @@
 using AmadarePlugin.Common;
 using AmadarePlugin.Options;
 using GridEditor;
+using Newtonsoft.Json;
 using Photon;
 using UnityEngine;
 
@@ -58,6 +59,7 @@ public class LoadoutSync : PunBehaviour
     [PunRPC]
     public void ReceiveFullState(string loadouts, string shares, bool alwaysShare, PhotonMessageInfo info)
     {
+        Plugin.Log.LogDebug($"{nameof(ReceiveCharacterLoadouts)}: {loadouts}|\n {shares}|\n {alwaysShare}");
         this.loadoutRepository.Load(loadouts);
         this.shareTracker.SetAlwaysShare(info.sender.ID, alwaysShare);
         this.shareTracker.Load(shares);
@@ -74,20 +76,27 @@ public class LoadoutSync : PunBehaviour
     [PunRPC]
     public void ReceiveShareChange(string name, bool value)
     {
+        Plugin.Log.LogDebug($"{nameof(ReceiveShareChange)}: {name} {value}");
         this.shareTracker.Set(name, value);
         this.loadoutManager.OnShareChanged();
     }
 
     public void PushCharacterLoadouts(string name)
     {
+        // for some reason, Photon is failing to serialize Dictionary, so sending already serialized state
+        var serializedLoadouts = JsonConvert.SerializeObject(this.loadoutRepository.GetAllSlots(name));
         this.photonView.RPC(nameof(ReceiveCharacterLoadouts), PhotonTargets.Others,
-            name, this.loadoutRepository.GetAllSlots(name)
+            name, serializedLoadouts
         );
     }
 
     [PunRPC]
-    public void ReceiveCharacterLoadouts(string name, Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[] loadouts)
+    public void ReceiveCharacterLoadouts(string name, string serializedLoadouts)
     {
+        Plugin.Log.LogDebug($"{nameof(ReceiveCharacterLoadouts)}: {name} {serializedLoadouts}");
+        var loadouts =
+            JsonConvert.DeserializeObject<Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID>[]>(
+                serializedLoadouts);
         this.loadoutRepository.SetAllSlots(name, loadouts);
         this.loadoutManager.OnLoadoutReceived();
     }

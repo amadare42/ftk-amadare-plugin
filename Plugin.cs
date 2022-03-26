@@ -27,7 +27,6 @@ namespace AmadarePlugin
         private void Awake()
         {
             Instance = this;
-            PhotonNetwork.logLevel = PhotonLogLevel.Full;
             OptionsManager.Init(this.Config);
             
             CachedDB.Init();

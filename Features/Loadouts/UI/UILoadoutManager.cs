@@ -397,7 +397,7 @@ public partial class UILoadoutManager
             this.localStatDummys = InventoryCalculatorHelper.GetMaximizeStatLoadout(cow, new List<CharacterOverworld>(0));
             this.distributedMaximizedStatDummys = InventoryCalculatorHelper.GetMaximizeStatLoadout(cow, cow
                 .GetLinkedPlayers(false)
-                .Where(lp => this.characterShareTracker.Get(lp.m_CharacterStats.m_CharacterName))
+                .Where(lp => this.characterShareTracker.Get(lp.GetCowUniqueName()))
                 .ToList()
             );
         }
@@ -534,7 +534,7 @@ public partial class UILoadoutManager
 
     private static void AppendItemListing(CharacterOverworld cow, Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID> dictionary, Dictionary<FTK_itembase.ID, CharacterOverworld> ownershipMap = null)
     {
-        foreach (var pair in dictionary)
+        foreach (var pair in dictionary.OrderBy(p => p.Key.GetUiIndex()))
         {
             var containerId = pair.Key;
             var itemId = pair.Value;

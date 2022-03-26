@@ -1,4 +1,5 @@
-﻿using AmadarePlugin.Extensions;
+﻿using System;
+using AmadarePlugin.Extensions;
 
 namespace AmadarePlugin.Common;
 
@@ -53,14 +54,13 @@ public static class FtkHelpers
         PlayerInventory.ContainerID.Neck,
     };
 
+    public static int GetUiIndex(this PlayerInventory.ContainerID containerID)
+    {
+        return Array.IndexOf(EquipableContainers, containerID);
+    }
+
     public static string GetCowUniqueName(this CharacterOverworld cow)
     {
-        var idx = FTKHub.Instance.m_CharacterOverworlds.IndexOf(cow);
-        if (idx == -1)
-        {
-            Plugin.Log.LogError($"Cannot find COW '{cow.m_PlayerName}'");
-        }
-
-        return $"COW_IDX_{idx}";
+        return $"COW_IDX_{cow.m_FTKPlayerID.TurnIndex}";
     }
 }

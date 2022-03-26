@@ -61,6 +61,9 @@
     </None>
     <None Remove="Resources\Icons\iconCrit.png" />
     <EmbeddedResource Include="Resources\Icons\iconCrit.png" />
+    <None Update="README.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   
   <ItemGroup>
@@ -77,6 +80,22 @@
     </ItemGroup>
     <Message Text="Copying plugin files to '$(BuiltPluginDestPath)'" Importance="High" />
     <Copy SourceFiles="@(_FilesToCopy)" DestinationFolder="$(BuiltPluginDestPath)" />
+  </Target>
+  
+  <Target Name="CopyCustomContent2" AfterTargets="Build" Condition="$(BuiltPluginDestPath2) != ''">
+    <ItemGroup>
+      <_FilesToCopy Include="$(OutputPath)*.*;$(ProjectDir)readme.md" />
+    </ItemGroup>
+    <Message Text="Copying plugin files to '$(BuiltPluginDestPath2)'" Importance="High" />
+    <Copy SourceFiles="@(_FilesToCopy)" DestinationFolder="$(BuiltPluginDestPath2)" />
+  </Target>
+  
+  <Target Name="CopyCustomContent3" AfterTargets="Build" Condition="$(BuiltPluginDestPath3) != ''">
+    <ItemGroup>
+      <_FilesToCopy Include="$(OutputPath)*.*;$(ProjectDir)readme.md" />
+    </ItemGroup>
+    <Message Text="Copying plugin files to '$(BuiltPluginDestPath3)'" Importance="High" />
+    <Copy SourceFiles="@(_FilesToCopy)" DestinationFolder="$(BuiltPluginDestPath3)" />
   </Target>
   
 </Project>
